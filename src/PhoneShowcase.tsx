@@ -6,7 +6,6 @@ import './phone-showcase.css'
 
 export function PhoneShowcase({ reduced }: { reduced: boolean }) {
   const [selected, setSelected] = useState(0)
-  const [entered, setEntered] = useState(false)
   const [ready, setReady] = useState(false)
   const [phase, setPhase] = useState('loading')
   const host = useRef<HTMLDivElement>(null)
@@ -22,7 +21,6 @@ export function PhoneShowcase({ reduced }: { reduced: boolean }) {
   useEffect(() => {
     const visit = () => {
       const active = document.documentElement.dataset.presentationSection === 'mobile-apps'
-      if (active && !settings.current.active) { settings.current.request++; setEntered(true) }
       settings.current.active = active
       controller.current?.update()
     }
@@ -30,11 +28,11 @@ export function PhoneShowcase({ reduced }: { reduced: boolean }) {
     return () => document.removeEventListener('presentationchange', visit)
   }, [])
   useEffect(() => {
-    if (!entered || !host.current) return
+    if (!host.current) return
     const abort = new AbortController(), element = host.current
     void import('./createPhoneScene').then(module => module.createPhoneScene(element, settings, abort.signal, value => {
       if (!abort.signal.aborted) setPhase(value)
-    })).then(scene => {
+    }, select)).then(scene => {
       if (!scene) return
       if (abort.signal.aborted) { scene.dispose(); return }
       controller.current = scene; setReady(true)
@@ -43,7 +41,7 @@ export function PhoneShowcase({ reduced }: { reduced: boolean }) {
       console.error('Unable to prepare the phone showcase', error); setPhase('unavailable')
     })
     return () => { abort.abort(); controller.current?.dispose(); controller.current = null }
-  }, [entered])
+  }, [])
   const keyboard = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
     const direction = ['ArrowRight', 'ArrowDown'].includes(event.key) ? 1 : ['ArrowLeft', 'ArrowUp'].includes(event.key) ? -1 : 0
     if (!direction && !['Home', 'End'].includes(event.key)) return
@@ -78,11 +76,10 @@ export function PhoneShowcase({ reduced }: { reduced: boolean }) {
       </div>
     </div>
     <div className="phone-showcase-visual">
-      <div className="phone-studio" ref={host} role="img" aria-label={`3D smartphone: ${status}. Select an app tab to return home and launch its screenshot.`}>
+      <div className="phone-studio" ref={host} role="group" aria-label={`3D smartphone: ${status}. Click a home-screen app icon or select an app tab to open it.`}>
         {!ready && phase !== 'unavailable' && <span className="phone-preparing">Preparing the phone<span /></span>}
         {phase === 'unavailable' && <img className="phone-fallback" src={app.screenshot} alt={`${app.name} app screen`} />}
       </div>
-      <div className="phone-scene-caption"><span className="phone-screen-status"><span />{status}</span></div>
     </div>
   </section>
 }

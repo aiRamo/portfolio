@@ -6,7 +6,7 @@ export const phoneApps = [
     screenshot: asset('stalker-sport'), icon: asset('stalker-sport-icon'), color: '#e63736',
     capabilities: [
       { title: '~3,000 monthly active users', detail: 'Combined across iOS and Android.', compact: '~3K monthly active users' },
-      { title: '~$1,500 / month', detail: 'Subscription revenue from paid app features.', compact: '~$1.5K/mo in subscriptions' },
+      { title: 'Real Revenue', detail: 'Subscription revenue from paid app features.', compact: 'Real Revenue' },
       { title: 'Live radar + video', detail: 'Real-time BLE speed telemetry, camera capture, and video overlays.', compact: 'Live radar + video overlays' },
       { title: 'iOS + Android', detail: 'Rebuilt the legacy iOS app in Flutter, with BLoC coordinating device data and app state.', compact: 'iOS + Android, built in Flutter' },
     ],

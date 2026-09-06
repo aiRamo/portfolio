@@ -22,8 +22,11 @@ const loadImage = (src: string) => new Promise<HTMLImageElement>((resolve, rejec
   image.src = src
 })
 
-export async function createPhoneScene(host: HTMLDivElement, settings: { current: PhoneSettings }, signal: AbortSignal, report: (phase: string) => void): Promise<PhoneController | null> {
-  const images = await Promise.all(phoneApps.map(async app => ({ screen: await loadImage(app.screenshot), icon: await loadImage(app.icon) })))
+export async function createPhoneScene(host: HTMLDivElement, settings: { current: PhoneSettings }, signal: AbortSignal, report: (phase: string) => void, select: (index: number) => void): Promise<PhoneController | null> {
+  const images = await Promise.all(phoneApps.map(async app => {
+    const [screen, icon] = await Promise.all([loadImage(app.screenshot), loadImage(app.icon)])
+    return { screen, icon }
+  }))
   if (signal.aborted) return null
   const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'low-power' })
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2))
@@ -69,7 +72,7 @@ export async function createPhoneScene(host: HTMLDivElement, settings: { current
   lens.position.set(.25, 2.46, .175); phone.add(lens)
 
   const iconXs = [155, 380, 605], iconY = 690, iconSize = 140
-  let active = -1, target = 0, request = -1, from = -1, elapsed = 0, previous = 0, frame = 0, disposed = false, lost = false, clock = 0, lastPhase = ''
+  let active = -1, target = -1, request = 0, from = -1, elapsed = phoneTransitionDuration, previous = 0, frame = 0, disposed = false, lost = false, clock = 0, lastPhase = ''
   let pointerX = 0, pointerY = 0, rotationX = .055, rotationY = -.25
   const roundedRect = (x: number, y: number, width: number, height: number, radius: number) => { context.beginPath(); context.roundRect(x, y, width, height, radius) }
   const home = (tap: number) => {
@@ -112,7 +115,7 @@ export async function createPhoneScene(host: HTMLDivElement, settings: { current
     context.restore()
   }
   const paint = () => {
-    const motion = phoneMotionAt(elapsed, from >= 0)
+    const motion = target < 0 ? { phase: 'home', app: 0, tap: 0 } : phoneMotionAt(elapsed, from >= 0)
     home(motion.tap)
     if (motion.phase === 'closing' && from >= 0) appWindow(from, motion.app)
     if (motion.phase === 'opening' || motion.phase === 'app') appWindow(target, motion.app)
@@ -135,9 +138,13 @@ export async function createPhoneScene(host: HTMLDivElement, settings: { current
     if (disposed || lost || !settings.current.active || document.hidden) return
     const delta = Math.min((now - previous) / 1000, .05); previous = now; clock += delta
     if (request !== settings.current.request) {
-      from = elapsed >= phoneTransitionDuration ? active : -1
-      target = settings.current.selected; request = settings.current.request; elapsed = 0
-      host.dataset.phoneApp = ''; lastPhase = ''
+      request = settings.current.request
+      if (target !== settings.current.selected) {
+        from = elapsed >= phoneTransitionDuration ? active : -1
+        target = settings.current.selected; elapsed = settings.current.reduced ? phoneTransitionDuration : from < 0 ? 1.52 : 0
+        host.dataset.phoneApp = ''; lastPhase = ''
+        paint()
+      }
     }
     if (elapsed < phoneTransitionDuration) { elapsed = Math.min(phoneTransitionDuration, elapsed + delta); paint() }
     const reduce = settings.current.reduced
@@ -161,12 +168,29 @@ export async function createPhoneScene(host: HTMLDivElement, settings: { current
     camera.updateProjectionMatrix(); render()
   }
   const pointer = (event: PointerEvent) => {
+    host.style.cursor = hitIcon(event) >= 0 ? 'pointer' : ''
     if (event.pointerType !== 'mouse') return
     const rect = host.getBoundingClientRect(); pointerX = (event.clientX - rect.left) / rect.width * 2 - 1; pointerY = (event.clientY - rect.top) / rect.height * 2 - 1
   }
-  const leave = () => { pointerX = pointerY = 0 }
+  const raycaster = new THREE.Raycaster()
+  const hitIcon = (event: MouseEvent) => {
+    if (!settings.current.active || target >= 0) return -1
+    const rect = renderer.domElement.getBoundingClientRect()
+    if (!rect.width || !rect.height) return -1
+    raycaster.setFromCamera(new THREE.Vector2((event.clientX - rect.left) / rect.width * 2 - 1, 1 - (event.clientY - rect.top) / rect.height * 2), camera)
+    const hit = raycaster.intersectObject(display)[0]
+    if (!hit?.uv) return -1
+    const x = hit.uv.x * 900, y = (1 - hit.uv.y) * 1920
+    return iconXs.findIndex(left => x >= left && x <= left + iconSize && y >= iconY && y <= iconY + 190)
+  }
+  const click = (event: MouseEvent) => {
+    const index = hitIcon(event)
+    if (index >= 0) { select(index); host.style.cursor = '' }
+  }
+  const leave = () => { pointerX = pointerY = 0; host.style.cursor = '' }
   const observer = new ResizeObserver(resize); observer.observe(host)
   host.addEventListener('pointermove', pointer); host.addEventListener('pointerleave', leave)
+  host.addEventListener('click', click)
   document.addEventListener('visibilitychange', update)
   const contextLost = (event: Event) => { event.preventDefault(); lost = true; report('unavailable'); cancelAnimationFrame(frame); frame = 0 }
   renderer.domElement.addEventListener('webglcontextlost', contextLost)
@@ -174,6 +198,7 @@ export async function createPhoneScene(host: HTMLDivElement, settings: { current
   return { update, dispose: () => {
     disposed = true; cancelAnimationFrame(frame); observer.disconnect()
     host.removeEventListener('pointermove', pointer); host.removeEventListener('pointerleave', leave); document.removeEventListener('visibilitychange', update)
+    host.removeEventListener('click', click); host.style.cursor = ''
     renderer.domElement.removeEventListener('webglcontextlost', contextLost)
     const geometries = new Set<THREE.BufferGeometry>(), materials = new Set<THREE.Material>()
     phone.traverse(object => { if (object instanceof THREE.Mesh) { geometries.add(object.geometry); for (const material of Array.isArray(object.material) ? object.material : [object.material]) materials.add(material) } })
