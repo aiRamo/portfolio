@@ -1,12 +1,13 @@
-import { sectionScrollAt, sectionScrollDuration } from './scrollMotion.mjs'
+import { sectionScrollAt, sectionScrollDuration, smoothScrollStep, wheelDeltaPixels, wheelTargetAt } from './scrollMotion.mjs'
 import type { PresentationState } from './presentation'
 
-/** Native scrolling; only explicit same-page links take control of the scroll position. */
+/** Smooth wheel/keyboard scrolling, with native touch momentum and eased section links. */
 export function attachFreeScroll(reduced: boolean, resume: boolean) {
   const root = document.documentElement
   const content = document.querySelector<HTMLElement>('.portfolio-content')!
   const panels = [...document.querySelectorAll<HTMLElement>('[data-slide]')]
   let initialized = false, active = -1, frame = 0, observation = 0
+  let smoothFrame = 0, smoothTarget = scrollY
   const ready = () => content.dataset.reveal === 'content'
   const offset = () => parseFloat(getComputedStyle(root).scrollPaddingTop) || 100
   const layoutTop = (element: HTMLElement) => {
@@ -35,7 +36,34 @@ export function attachFreeScroll(reduced: boolean, resume: boolean) {
     document.dispatchEvent(new CustomEvent('presentationchange', { detail }))
   }
   const schedule = () => { if (!observation) observation = requestAnimationFrame(update) }
-  const cancel = () => { cancelAnimationFrame(frame); frame = 0 }
+  const cancel = () => {
+    cancelAnimationFrame(frame); frame = 0
+    cancelAnimationFrame(smoothFrame); smoothFrame = 0; smoothTarget = scrollY
+  }
+  const scroll = (delta: number) => {
+    if (!initialized || !ready()) return
+    cancelAnimationFrame(frame); frame = 0
+    if (!smoothFrame) smoothTarget = scrollY
+    smoothTarget = wheelTargetAt(scrollY, smoothTarget, delta, root.scrollHeight - innerHeight)
+    if (smoothFrame) return
+    let previous = performance.now(), position = scrollY
+    const tick = (now: number) => {
+      smoothTarget = Math.max(0, Math.min(root.scrollHeight - innerHeight, smoothTarget))
+      position = smoothScrollStep(position, smoothTarget, Math.min((now - previous) / 1000, .064) * (reduced ? 2 : 1))
+      previous = now
+      if (Math.abs(position - smoothTarget) < .5) position = smoothTarget
+      window.scrollTo({ top: position, behavior: 'instant' })
+      if (position !== smoothTarget) smoothFrame = requestAnimationFrame(tick)
+      else { smoothFrame = 0; update() }
+    }
+    smoothFrame = requestAnimationFrame(tick)
+  }
+  const nativeTarget = (target: EventTarget | null) => target instanceof Element && !!target.closest('input,textarea,select,[contenteditable="true"],[data-native-scroll],[role="dialog"]')
+  const wheel = (event: WheelEvent) => {
+    if (event.defaultPrevented || event.ctrlKey || event.metaKey || nativeTarget(event.target) || Math.abs(event.deltaX) > Math.abs(event.deltaY) || !event.cancelable || !initialized || !ready()) return
+    event.preventDefault()
+    scroll(wheelDeltaPixels(event.deltaY, event.deltaMode, innerHeight))
+  }
   const focus = (panel: HTMLElement) => {
     const target = panel.querySelector<HTMLElement>('h1,h2,h3') || panel
     if (!target.hasAttribute('tabindex')) {
@@ -73,7 +101,16 @@ export function attachFreeScroll(reduced: boolean, resume: boolean) {
     if (panel) go(panel)
   }
   const key = (event: KeyboardEvent) => {
-    if (['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', ' ', 'Home', 'End'].includes(event.key)) cancel()
+    if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey || nativeTarget(event.target) || !initialized || !ready()) return
+    if (event.target instanceof Element) {
+      if (event.key === ' ' && event.target.closest('button,a')) return
+      if (event.target.closest('.brand-navigation,[role="tablist"]') && ['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return
+    }
+    const direction = ['ArrowDown', 'PageDown', ' '].includes(event.key) ? (event.shiftKey ? -1 : 1) : ['ArrowUp', 'PageUp'].includes(event.key) ? -1 : 0
+    if (!direction && !['Home', 'End'].includes(event.key)) return
+    event.preventDefault()
+    const target = smoothFrame ? smoothTarget : scrollY
+    scroll(event.key === 'Home' ? -target : event.key === 'End' ? root.scrollHeight - innerHeight - target : direction * (event.key.startsWith('Arrow') ? 60 : innerHeight * .85))
   }
   const initialize = () => {
     if (initialized || !ready()) return
@@ -91,8 +128,8 @@ export function attachFreeScroll(reduced: boolean, resume: boolean) {
   panels.forEach(panel => resize.observe(panel))
   addEventListener('scroll', schedule, { passive: true })
   addEventListener('resize', schedule)
-  // These listeners only cancel an in-flight menu jump. Native input is never prevented.
-  addEventListener('wheel', cancel, { passive: true })
+  addEventListener('wheel', wheel, { passive: false })
+  // Touch keeps the browser's smooth, inertial scrolling and interrupts queued motion.
   addEventListener('touchstart', cancel, { passive: true })
   addEventListener('keydown', key)
   addEventListener('popstate', historyChange)
@@ -102,7 +139,7 @@ export function attachFreeScroll(reduced: boolean, resume: boolean) {
   return () => {
     cancel(); cancelAnimationFrame(observation); observer.disconnect(); resize.disconnect()
     removeEventListener('scroll', schedule); removeEventListener('resize', schedule)
-    removeEventListener('wheel', cancel); removeEventListener('touchstart', cancel); removeEventListener('keydown', key)
+    removeEventListener('wheel', wheel); removeEventListener('touchstart', cancel); removeEventListener('keydown', key)
     removeEventListener('popstate', historyChange); removeEventListener('hashchange', historyChange)
     document.removeEventListener('click', click)
     delete root.dataset.presentation; delete root.dataset.presentationSection; delete root.dataset.navigationMode; delete root.dataset.sectionScrolling

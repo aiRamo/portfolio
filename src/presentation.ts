@@ -113,21 +113,17 @@ function attachDesktopPresentation(reduced: boolean, resume: boolean) {
     const stop = stops[index]
     return stop && stop.end > stop.top && (delta > 0 ? scrollY < stop.end - .5 : delta < 0 && scrollY > stop.top + .5)
   }
-  const read = (delta: number, smooth = true) => {
+  const read = (delta: number) => {
     const stop = stops[index]
     if (!readingFrame) readingTarget = scrollY
     // Reverse immediately, without first completing queued movement in the other direction.
     const base = (readingTarget - scrollY) * delta < 0 ? scrollY : readingTarget
     readingTarget = containedScrollAt(base, delta, stop.top, stop.end)
     cancelAnimationFrame(alignmentFrame); alignmentFrame = 0
-    if (!smooth || reduced) {
-      cancelAnimationFrame(readingFrame); readingFrame = 0
-      window.scrollTo({ top: readingTarget, behavior: 'instant' }); crop(); return
-    }
     if (readingFrame) return
     let previous = performance.now()
     const tick = (now: number) => {
-      let position = smoothScrollStep(scrollY, readingTarget, Math.min((now - previous) / 1000, .064))
+      let position = smoothScrollStep(scrollY, readingTarget, Math.min((now - previous) / 1000, .064) * (reduced ? 2 : 1))
       previous = now
       if (Math.abs(position - readingTarget) < 1) position = readingTarget
       window.scrollTo({ top: position, behavior: 'instant' }); crop()
@@ -145,7 +141,7 @@ function attachDesktopPresentation(reduced: boolean, resume: boolean) {
       finish()
     }
   }
-  const pan = (delta: number, smooth = true) => {
+  const pan = (delta: number) => {
     if (!initialized || !ready() || moving || !sceneEnd()) return
     if (index === 1 && delta >= 0) return
     cancelAnimationFrame(alignmentFrame); alignmentFrame = 0
@@ -157,16 +153,10 @@ function attachDesktopPresentation(reduced: boolean, resume: boolean) {
       publish(false)
     }
     showScene()
-    if (!smooth) {
-      cancelAnimationFrame(panFrame); panFrame = 0
-      panPosition = panTarget
-      renderPan()
-      return
-    }
     if (panFrame) return
     panPrevious = performance.now()
     const tick = (now: number) => {
-      panPosition = smoothScrollStep(panPosition, panTarget, Math.min((now - panPrevious) / 1000, .064))
+      panPosition = smoothScrollStep(panPosition, panTarget, Math.min((now - panPrevious) / 1000, .064) * (reduced ? 2 : 1))
       panPrevious = now
       if (Math.abs(panPosition - panTarget) < .5) panPosition = panTarget
       renderPan()
@@ -248,14 +238,14 @@ function attachDesktopPresentation(reduced: boolean, resume: boolean) {
     if (!touch.scene && (touch.reading || canRead(delta))) {
       touch.reading = true
       touch.velocity = delta / Math.max(8, now - touch.lastTime)
-      read(delta, false)
+      read(delta)
       touch.lastY = point.clientY; touch.lastTime = now
       return
     }
     if (index === 1 && dy > 0) touch.scene = true
     if (touch.scene) {
       touch.velocity = delta / Math.max(8, now - touch.lastTime)
-      pan(delta, false)
+      pan(delta)
     }
     touch.lastY = point.clientY; touch.lastTime = now
   }
