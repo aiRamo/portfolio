@@ -1,0 +1,60 @@
+@layer journey {
+  :root { --pan-progress: 0; --sky-reveal: 0; --hero-visibility: 1; }
+  body { background: transparent; }
+  main { position: relative; z-index: 1; }
+  .scene-backdrop { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; background: linear-gradient(180deg, rgb(var(--page)), rgb(var(--panel))); }
+  .scene-backdrop .valley { position: absolute; inset: 0; height: 100%; }
+  .hero { height: 220svh; min-height: 0; overflow: visible; isolation: auto; background: transparent; }
+  .hero::after { display: none; }
+  .hero-stage { position: sticky; top: 0; height: 100svh; width: 100%; overflow: hidden; }
+  .hero-stage::after { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: var(--hero-visibility); background: linear-gradient(90deg, #07191450, transparent 58%), linear-gradient(0deg, #061710c2, transparent 37%), linear-gradient(180deg, #0b1f2526, transparent 20%); }
+  .hero-copy, .hero-bottom, .landscape-note { opacity: var(--hero-visibility); translate: 0 calc(var(--pan-progress) * -90px); }
+  :root[data-hero-visible='false'] .hero-stage { visibility: hidden; }
+  .valley-fallback { opacity: var(--hero-visibility); }
+
+  .site-header { position: fixed; color: color-mix(in srgb, rgb(var(--hero-ink)), rgb(var(--ink)) calc(var(--sky-reveal) * 100%)); text-shadow: 0 1px 16px rgb(var(--page) / .15); background: linear-gradient(180deg, rgb(var(--page) / calc(var(--sky-reveal) * .86)), transparent); }
+  .site-header .theme-toggle { border-color: currentColor; background: rgb(var(--panel) / .12); }
+  .site-header .toggle-track { background: currentColor; }
+  .site-header .toggle-thumb { background: rgb(var(--panel)); }
+  .site-header :focus-visible { outline-color: currentColor; }
+  .light-wash { background: radial-gradient(ellipse at var(--light-x) var(--light-y), #ffd19755, transparent 75%); }
+
+  .sky-content { position: relative; padding-bottom: 24px; }
+  .sky-content .reveal { opacity: var(--pull-opacity, 1); transform: none; translate: 0 var(--pull-y, 0px); transition: none; }
+  .intro { min-height: 65svh; align-content: start; padding-block: 80px 120px; }
+  .intro h2 { font-size: clamp(42px, 4.2vw, 65px); }
+  .intro-aside { opacity: .8; }
+  .project-art, .about-card { box-shadow: 0 28px 70px #071b3520, 0 2px 0 rgb(var(--hero-ink) / .4); }
+  .about-card, .project-details { background: linear-gradient(0deg, rgb(var(--panel) / .78), rgb(var(--panel) / .43)); backdrop-filter: blur(14px); border-color: rgb(var(--ink) / .18); }
+  .marquee { background: rgb(var(--panel) / .14); }
+  .project, .notes, .work, .contact, .note, .stats, .toolkit, footer { border-color: rgb(var(--ink) / .2); }
+  .section-heading h2, .about-heading h2, .contact h2 { background-image: linear-gradient(0deg, color-mix(in srgb, rgb(var(--ink)), rgb(var(--hero-ink)) 17%), rgb(var(--ink)) 70%); }
+  .sky-pause { display: none; position: fixed; z-index: 25; left: 20px; bottom: 18px; gap: 9px; align-items: center; min-height: 44px; padding: 10px 14px; border: 1px solid rgb(var(--ink) / .2); border-radius: 30px; background: rgb(var(--panel) / .3); backdrop-filter: blur(12px); font-size: .625rem; letter-spacing: .1em; }
+  :root[data-journey-stage='sky'] .sky-pause { display: flex; }
+  .page-coordinate { color: rgb(var(--ink) / .7); }
+
+  @media (max-width: 760px) {
+    html { scroll-padding-top: 135px; }
+    .hero-stage::after { background: linear-gradient(0deg, #05150ede, #081b1733 53%, transparent 75%), linear-gradient(180deg, #10283750, transparent 23%); }
+    .intro { min-height: 76svh; padding-block: 80px 95px; }
+    .intro h2 { font-size: clamp(37px, 8vw, 48px); }
+    .sky-content .section-shell { width: calc(100% - 44px); }
+    .sky-pause { left: auto; right: 14px; bottom: 14px; padding: 10px; }
+    .sky-pause span { display: none; }
+  }
+  @media (max-height: 650px) and (min-width: 761px) {
+    .hero h1 { font-size: 66px; }
+    .hero-copy { bottom: 19%; }
+    .hero-eyebrow { margin-bottom: 10px; }
+    .hero-copy > p { margin-top: 14px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .sky-content .reveal { translate: none; opacity: 1; }
+    .hero-copy, .hero-bottom, .landscape-note { translate: none; }
+  }
+  @media print {
+    .scene-backdrop, .sky-pause { display: none; }
+    .sky-content { padding: 0; }
+    .sky-content .reveal { translate: none; opacity: 1; }
+  }
+}

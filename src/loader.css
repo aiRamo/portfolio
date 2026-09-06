@@ -1,0 +1,46 @@
+@layer loading {
+  html { scrollbar-gutter: stable; }
+  html:has(.portfolio-content[inert]), html:has(.portfolio-content[inert]) body { overflow: hidden; }
+  .portfolio-content { opacity: 0; transition: opacity 1100ms cubic-bezier(.33, 0, .2, 1); }
+  .portfolio-content[data-reveal='content'] { opacity: 1; }
+  .scene-loader {
+    --loader-bg: #edf1eb;
+    --loader-ink: #273c41;
+    --loader-glow: #c8d9d8;
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    z-index: 1000;
+    display: grid;
+    place-items: center;
+    padding: 28px;
+    color: var(--loader-ink);
+    background: radial-gradient(ellipse at 50% 54%, var(--loader-glow), transparent 68%), var(--loader-bg);
+    opacity: 1;
+    transition: opacity 600ms cubic-bezier(.22, 1, .36, 1);
+    touch-action: none;
+    overscroll-behavior: none;
+  }
+  :root[data-theme='dark'] .scene-loader { --loader-bg: #09121d; --loader-ink: #d9e6ed; --loader-glow: #142b3a; }
+  .scene-loader.is-leaving { opacity: 0; }
+  .scene-loader-center { width: min(100%, 350px); }
+  .scene-loader-brand { display: flex; align-items: center; justify-content: center; gap: 18px; margin-bottom: 40px; white-space: nowrap; font-size: clamp(25px, 6.5vw, 36px); font-weight: 650; letter-spacing: -.055em; line-height: 1.2; }
+  .scene-loader-brand > svg { width: 36px; height: 36px; }
+  .scene-loader-dot { opacity: .65; }
+  .scene-loader-track { height: 2px; background: color-mix(in srgb, var(--loader-ink) 16%, transparent); overflow: hidden; }
+  .scene-loader-track > span { display: block; width: 100%; height: 100%; background: var(--loader-ink); transform-origin: left; transition: transform 650ms cubic-bezier(.22, 1, .36, 1); }
+  .scene-loader-caption { display: flex; justify-content: space-between; margin-top: 15px; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; opacity: .62; }
+  .scene-loader-caption > span:last-child { font-variant-numeric: tabular-nums; }
+  .scene-backdrop .valley { transition: none; }
+  @media (max-width: 420px) {
+    .scene-loader-center { max-width: 290px; }
+    .scene-loader-brand { gap: 13px; }
+    .scene-loader-brand > svg { width: 29px; height: 29px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .portfolio-content { transition-duration: 800ms; }
+    .scene-loader { transition-duration: 450ms; }
+    .scene-loader-track > span { transition: none; }
+  }
+  @media print { .scene-loader { display: none; } .portfolio-content { opacity: 1; } }
+}
