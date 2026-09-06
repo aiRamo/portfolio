@@ -39,6 +39,7 @@ See the [official Vite deployment guide](https://vite.dev/guide/static-deploy#gi
 - `src/valleyShaders.ts`: procedural sky/clouds, sun and moon, reflective water, and cinematic finishing.
 - `src/granite.ts`: restrained granite grain, mineral veins, crevice shading, and snow-covered shelves.
 - `src/cliffs.mjs`: closed cliff masses with recessed joints, bevelled geological planes, and eroded talus geometry.
+- `src/catTree.mjs`: faceted bare tree with a black cat on its lower branch and an orange cat reaching down from its upper branch; the roots conform to the left cliff rim.
 - `src/landscape.mjs`: a continuous terrain mesh with denser geometry around the observer.
 - `src/tundra.ts`: evergreen pine material.
 - `src/forest.mjs`: a separate 18-triangle distant pine, terrain-triangle sampling, and deterministic forest groves.
@@ -76,6 +77,7 @@ See the [official Vite deployment guide](https://vite.dev/guide/static-deploy#gi
 - Distant forest uses thousands of smaller 18-triangle pines in a single instanced mesh. Groves follow gentle terrain, thin near the snowline and exposed slopes, and fade into irregular clearings. Roots sample the actual terrain triangles, trees remain upright, and their scale and blue atmospheric tint recede with distance. Detailed nearby pines frame the lake; the distant canopy avoids an extra shadow-casting pass.
 - Near and middle-distance cliffs use four closed rock masses with broad weathered planes, recessed joints of varying depth, small bevels, and irregular sloping crests. The former scattered wedge outcrops are removed. Terrain spacing tightens to roughly 0.4 units near the observer, with smooth vertex normals and progressively coarser distant geometry. Rockfall gathers at the bases, and nearby trees root to the highest actual rock or terrain surface. The dense distant forest occupies the exposed valleys between the cliffs.
 - Cliff geometry was reviewed with a plain gray material before adding the granite finish. In development, append `?clay` to the local URL to inspect the forms without the surface material. The regular scene uses subtle mineral-scale relief, crevice shading, and smooth atmospheric color; distant mountain shoulders remain broad and gently sloped.
+- The clifftop cat sculpture appears during the upward camera pan and shares the landscape's changing lighting. Its four static meshes include the forked tree, two cats, and rocky footing. While Vite is running, open `/tools/cat-study.html` to inspect the model with orbit controls; this development study is not included in the production build.
 - Keyboard navigation, a skip link, visible focus states, expandable case notes, and working contact/profile links are included.
 - A readable fallback is shown if WebGL is unavailable. The rest of the portfolio remains usable.
 - Three.js loads in a separate chunk. Fonts are self-hosted, and no analytics or external font requests are used.

@@ -14,6 +14,7 @@ import { landscapeGeometry } from './landscape.mjs'
 import { CLIFF_MASSES, cliffMassGeometry, talusGeometry } from './cliffs.mjs'
 import { scrollJourney, skyCameraAt } from './scrollJourney.mjs'
 import { createSkyAircraft } from './skyAircraft'
+import { createClifftopCats } from './catTree.mjs'
 
 export type SceneSettings = { paused: boolean; reduced: boolean }
 
@@ -183,6 +184,10 @@ export async function createValleyScene(host: HTMLDivElement, settings: { curren
       }
       return surface
     }
+    // This small sculpture is rooted on the crest, revealed by the upward pan.
+    const catTree = createClifftopCats((x: number, z: number) => rootedSurface(x, z).height)
+    world.add(catTree)
+    host.dataset.catTree = 'left-cliff-rim'
     const tarnGeometry = new THREE.CircleGeometry(1, 128)
     const tarnPositions = tarnGeometry.attributes.position
     for (let i = 1; i < tarnPositions.count; i++) {
