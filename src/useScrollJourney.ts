@@ -1,7 +1,6 @@
 import { useEffect, type RefObject } from 'react'
 import { contentPullAt, journeyAt, scrollJourney } from './scrollJourney.mjs'
-import { attachSmoothWheel } from './smoothWheel'
-import { attachAnchorScroll } from './anchorScroll'
+import { attachPresentation } from './presentation'
 
 export function useScrollJourney(reduced: boolean, progress: RefObject<HTMLDivElement | null>, setActive: (section: string) => void) {
   useEffect(() => {
@@ -42,13 +41,11 @@ export function useScrollJourney(reduced: boolean, progress: RefObject<HTMLDivEl
     addEventListener('scroll', schedule, { passive: true })
     addEventListener('resize', schedule)
     addEventListener('focusin', schedule)
-    const wheel = attachSmoothWheel()
-    const detachAnchorScroll = attachAnchorScroll(reduced, wheel.stop)
+    const detachPresentation = attachPresentation(reduced)
     update()
     return () => {
       cancelAnimationFrame(frame); resize.disconnect()
-      detachAnchorScroll()
-      wheel.dispose()
+      detachPresentation()
       removeEventListener('scroll', schedule); removeEventListener('resize', schedule); removeEventListener('focusin', schedule)
       pulls.forEach(({ element }) => { element.style.removeProperty('--pull-y'); element.style.removeProperty('--pull-opacity') })
     }

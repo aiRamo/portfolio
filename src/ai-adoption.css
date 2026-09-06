@@ -1,0 +1,84 @@
+@layer components {
+  .ai-adoption { padding-block: 70px 130px; }
+  .ai-heading { margin-bottom: 54px; }
+  .ai-heading .eyebrow { margin-bottom: 24px; }
+  .ai-layout { display: grid; grid-template-columns: .9fr 1.1fr; align-items: start; gap: clamp(32px, 5vw, 78px); }
+  .ai-lead { font-size: 21px; line-height: 1.6; color: rgb(var(--ink)); max-width: 470px; }
+  .ai-story-steps { list-style: none; padding: 0; margin-top: 32px; display: grid; gap: 25px; }
+  .ai-story-steps li { display: grid; grid-template-columns: 24px 1fr; gap: 14px; }
+  .ai-story-steps li > span { font-size: 10px; color: rgb(var(--muted)); padding-top: 6px; }
+  .ai-story-steps h3 { font: 550 17px 'DM Sans Variable', sans-serif; letter-spacing: -.02em; margin-bottom: 7px; }
+  .ai-story-steps p { font-size: 15px; line-height: 1.75; }
+  .ai-tool-note { border-top: 1px solid rgb(var(--ink) / .2); margin-top: 28px; padding-top: 20px; }
+  .ai-tool-note p { font-size: 13px; margin-top: 8px; }
+  .ai-diagram { background: linear-gradient(150deg, #1e3539, #101e27); color: #f5f8f4; border: 1px solid #ffffff20; border-radius: 22px; padding: 25px 24px 12px; box-shadow: 0 25px 65px #06182426; overflow: hidden; }
+  .ai-diagram-heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 30px; }
+  .ai-diagram-heading .mini-label { font-size: 9px; letter-spacing: .12em; color: #bbd0ca; }
+  .ai-sequence-number { color: #98aaa8; font-size: 10px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .ai-diagram > svg { width: 100%; height: auto; overflow: visible; }
+  .ai-connection-base, .ai-connection-fill { fill: none; stroke: white; stroke-width: 2; stroke-linecap: round; }
+  .ai-connection-base { opacity: .45; }
+  .ai-connection-fill { stroke: #4ce292; }
+  .ai-node-label { fill: #f5f8f4; font: 500 17px 'DM Sans Variable', sans-serif; text-anchor: middle; }
+  .ai-recipient-labels { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; margin-top: 8px; }
+  .ai-recipient-labels strong { display: block; font-size: 14px; font-weight: 500; }
+  .ai-recipient-labels span { display: block; color: #afc5c1; font-size: 12px; line-height: 1.45; margin-top: 6px; }
+  .ai-caption { display: flex; align-items: center; gap: 10px; min-height: 88px; font-size: 14px; line-height: 1.55; color: #e0eae5; padding: 16px 6px; }
+  .ai-caption-dot { width: 5px; height: 5px; border-radius: 50%; background: #4ce292; flex-shrink: 0; }
+  .ai-caption-list { list-style: none; padding: 0; display: grid; gap: 10px; width: 100%; }
+  .ai-caption-list li { display: flex; align-items: baseline; gap: 10px; visibility: hidden; }
+  .ai-caption-list li[data-visible='true'] { visibility: visible; }
+  .ai-caption-list strong { font-weight: 700; color: #f5f8f4; }
+  .ai-caption-list .ai-caption-dot { align-self: flex-start; margin-top: .6em; }
+  .ai-diagram-footer { border-top: 1px solid #ffffff20; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 8px; }
+  .ai-diagram-footer > span { color: #afc5c1; font-size: 8px; letter-spacing: .12em; }
+  .ai-diagram-footer > div { display: flex; gap: 10px; }
+  .ai-diagram-footer button { display: flex; gap: 7px; align-items: center; min-height: 44px; padding: 8px 3px; font-size: 12px; }
+  .ai-diagram-footer button:hover { color: #4ce292; }
+  .ai-diagram-footer button:focus-visible { outline-color: #4ce292; }
+  @media (max-width: 1000px) {
+    .ai-layout { grid-template-columns: 1fr; gap: 40px; }
+    .ai-lead { max-width: 650px; }
+    .ai-diagram { width: 100%; max-width: 680px; justify-self: center; }
+  }
+  @media (max-width: 760px) {
+    .ai-adoption { padding-block: 60px 85px; }
+    .ai-heading { margin-bottom: 32px; }
+    .ai-lead { font-size: 19px; }
+    .ai-diagram { padding: 20px 12px 10px; border-radius: 16px; }
+    .ai-node-label { font-size: 26px; }
+    .ai-recipient-labels { gap: 6px; }
+    .ai-recipient-labels strong { font-size: 12px; }
+    .ai-recipient-labels span { font-size: 11px; }
+    .ai-diagram-heading { gap: 8px; margin-bottom: 25px; }
+    .ai-diagram-heading .mini-label { font-size: 8px; }
+    .ai-caption { font-size: 13px; min-height: 82px; }
+    .ai-diagram-footer > span { max-width: 75px; line-height: 1.6; }
+  }
+}
+
+@layer journey {
+  @media (min-width: 1001px) {
+    .ai-adoption[data-slide] { padding-block: 12px 24px; }
+    .ai-layout { grid-template-columns: 1fr 1fr; gap: clamp(28px, 4vw, 64px); }
+    .ai-heading { margin-bottom: clamp(16px, 2.4svh, 26px); }
+    .ai-heading .eyebrow { font-size: 10px; margin-bottom: 12px; }
+    .ai-heading h2 { font-size: clamp(32px, min(3.7vw, 5.5svh), 54px); }
+    .ai-lead { font-size: clamp(16px, 2.2svh, 20px); line-height: 1.5; max-width: none; }
+    .ai-story-steps { margin-top: clamp(18px, 2.5svh, 28px); gap: clamp(12px, 1.8svh, 20px); }
+    .ai-story-steps h3 { font-size: 15px; margin-bottom: 4px; }
+    .ai-story-steps p { font-size: 14px; line-height: 1.5; }
+    .ai-tool-note { margin-top: 16px; padding-top: 12px; }
+    .ai-tool-note p { font-size: 12px; line-height: 1.5; margin-top: 5px; }
+    .ai-tool-note .mini-label { font-size: 9px; }
+    .ai-diagram { --ai-graph-width: clamp(283px, calc((100svh - 500px) * 1.6667), 583px); padding: 18px 20px 10px; }
+    .ai-diagram-heading { margin-bottom: 12px; }
+    .ai-diagram > svg { display: block; width: min(100%, var(--ai-graph-width)); margin-inline: auto; }
+    .ai-recipient-labels { width: min(100%, var(--ai-graph-width)); margin: 4px auto 0; }
+    .ai-recipient-labels strong { font-size: 12px; }
+    .ai-recipient-labels span { font-size: 10px; margin-top: 3px; }
+    .ai-caption { font-size: 12px; line-height: 1.5; padding: 14px 0; }
+    .ai-caption-list { gap: 7px; }
+    .ai-diagram-footer { min-height: 53px; }
+  }
+}

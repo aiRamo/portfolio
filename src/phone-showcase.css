@@ -1,0 +1,110 @@
+@layer journey {
+  .phone-showcase[data-slide] { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); grid-template-areas: 'heading phone' 'details phone'; gap: 22px clamp(28px, 5vw, 78px); height: calc(100svh - 176px); min-height: 0; padding: 0; }
+  .phone-showcase-heading { grid-area: heading; min-width: 0; padding-top: 8px; }
+  .phone-showcase-heading > .eyebrow { margin-bottom: 12px; font-size: 9px; }
+  .phone-showcase h2 { font-size: clamp(32px, 3.4vw, 49px); line-height: 1.12; }
+  .phone-app-tabs { display: inline-flex; gap: 4px; max-width: 100%; padding: 4px; margin-top: 20px; border: 1px solid rgb(var(--ink) / .15); border-radius: 15px; background: rgb(var(--panel) / .2); }
+  .phone-app-tabs button { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 6px 12px; border: 1px solid transparent; border-radius: 11px; font-size: 12px; white-space: nowrap; transition: background .2s ease, border-color .2s ease; }
+  .phone-app-tabs button[aria-selected='true'] { background: rgb(var(--panel) / .78); border-color: rgb(var(--ink) / .2); box-shadow: 0 3px 12px #07182210; }
+  .phone-app-tabs button:hover { background: rgb(var(--panel) / .55); }
+  .phone-app-tabs img { width: 28px; height: 28px; border-radius: 7px; }
+  .phone-app-detail { grid-area: details; min-width: 0; align-self: start; }
+  .phone-app-facts { animation: phone-facts-enter .28s ease both; }
+  .phone-app-detail .mini-label { color: rgb(var(--muted)); font-size: 9px; }
+  .phone-app-detail h3 { font: 550 clamp(21px, 2vw, 28px)/1.2 'DM Sans Variable', sans-serif; letter-spacing: -.035em; margin-top: 6px; }
+  .phone-app-description { font-size: 13px; line-height: 1.5; margin-top: 7px; max-width: 450px; }
+  .phone-capabilities { display: grid; gap: 13px; list-style: none; padding: 0; margin-top: 20px; }
+  .phone-capabilities li { display: flex; align-items: baseline; gap: 10px; }
+  .phone-capabilities li::before { content: ''; flex: 0 0 4px; width: 4px; height: 4px; border-radius: 50%; background: rgb(var(--ink)); position: relative; top: -.15em; }
+  .phone-capability-full strong { display: block; font-size: 14px; line-height: 1.4; font-weight: 550; }
+  .phone-capability-full > span { display: block; color: rgb(var(--muted)); font-size: 12px; line-height: 1.5; margin-top: 3px; }
+  .phone-capability-compact { display: none; }
+  .phone-app-detail a { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; margin-top: 10px; font-size: 11px; }
+  .phone-app-detail a:hover { text-decoration: underline; text-underline-offset: 4px; }
+  .phone-showcase-visual { grid-area: phone; position: relative; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+  .phone-showcase-visual::before { content: ''; position: absolute; width: 86%; height: 68%; border-radius: 50%; top: 12%; left: 7%; background: radial-gradient(ellipse, rgb(var(--panel) / .5), transparent 68%); pointer-events: none; }
+  .phone-studio { position: relative; flex: 1; min-height: 0; }
+  .phone-studio canvas { display: block; width: 100%; height: 100%; }
+  .phone-scene-caption { min-height: 40px; padding-bottom: 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px; color: rgb(var(--muted)); }
+  .phone-screen-status { display: flex; align-items: center; gap: 7px; font-size: 10px; }
+  .phone-screen-status > span { width: 4px; height: 4px; background: currentColor; border-radius: 50%; flex-shrink: 0; }
+  .phone-preparing { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 12px; color: rgb(var(--muted)); }
+  .phone-preparing > span { height: 5px; width: 5px; border-radius: 50%; background: currentColor; }
+  .phone-fallback { width: 100%; height: 100%; object-fit: contain; }
+  .phone-studio:has(.phone-fallback) canvas { display: none; }
+  @keyframes phone-facts-enter { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+  @media (min-width: 1001px) {
+    .phone-app-description { font-size: clamp(16px, 1.05vw, 18px); max-width: 560px; }
+    .phone-capability-full strong { font-size: clamp(17px, 1.15vw, 20px); }
+    .phone-capability-full > span { font-size: clamp(15px, 1vw, 18px); }
+    .phone-app-detail a { font-size: 13px; }
+  }
+  @media (max-width: 1000px) and (min-width: 761px) {
+    .phone-showcase[data-slide] { grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); column-gap: 24px; }
+    .phone-app-tabs button { padding-inline: 8px; gap: 6px; font-size: 11px; }
+    .phone-app-tabs img { width: 24px; height: 24px; }
+  }
+  @media (max-width: 760px) {
+    .phone-showcase[data-slide] { height: calc(100svh - 166px); grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); grid-template-areas: 'heading heading' 'details phone'; gap: 24px 10px; }
+    .phone-showcase-heading { padding-top: 0; }
+    .phone-showcase-heading > .eyebrow { font-size: 8px; margin-bottom: 8px; }
+    .phone-showcase h2 { font-size: clamp(26px, 6.7vw, 36px); }
+    .phone-app-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 16px; gap: 2px; border-radius: 13px; }
+    .phone-app-tabs button { min-width: 0; padding: 5px 4px; gap: 6px; font-size: 10px; }
+    .phone-app-tabs img { width: 24px; height: 24px; border-radius: 6px; }
+    .phone-app-detail { align-self: center; padding-bottom: 24px; }
+    .phone-app-detail .mini-label { font-size: 8px; letter-spacing: .08em; }
+    .phone-app-detail h3 { font-size: clamp(18px, 4.6vw, 23px); margin-top: 7px; }
+    .phone-app-description, .phone-capability-full { display: none; }
+    .phone-capability-compact { display: block; font-size: 12px; line-height: 1.5; }
+    .phone-capabilities { gap: 14px; margin-top: 20px; }
+    .phone-capabilities li { gap: 7px; }
+    .phone-app-detail a { font-size: 10px; gap: 5px; margin-top: 12px; }
+    .phone-app-detail a svg { width: 12px; }
+    .phone-scene-caption { justify-content: center; min-height: 34px; }
+    .phone-screen-status { font-size: 8px; gap: 5px; text-align: center; }
+  }
+  @media (max-height: 760px) and (min-width: 761px) {
+    .phone-showcase[data-slide] { row-gap: 16px; }
+    .phone-showcase h2 { font-size: 36px; }
+    .phone-app-tabs { margin-top: 14px; }
+    .phone-app-description { font-size: 12px; }
+    .phone-capabilities { margin-top: 14px; gap: 10px; }
+    .phone-app-detail a { margin-top: 4px; }
+  }
+  @media (max-height: 800px) and (min-width: 1001px) {
+    .phone-showcase[data-slide] { row-gap: 8px; }
+    .phone-showcase-heading { padding-top: 2px; }
+    .phone-showcase-heading > .eyebrow { margin-bottom: 8px; }
+    .phone-app-tabs { margin-top: 10px; }
+    .phone-app-description { font-size: 15px; line-height: 1.4; }
+    .phone-capability-full strong { font-size: 17px; line-height: 1.35; }
+    .phone-capability-full > span { font-size: 14.5px; line-height: 1.4; }
+    .phone-capabilities { gap: 8px; margin-top: 12px; }
+  }
+  @media (max-height: 700px) and (max-width: 760px) {
+    .phone-showcase[data-slide] { row-gap: 14px; }
+    .phone-showcase-heading > .eyebrow { display: none; }
+    .phone-app-tabs { margin-top: 10px; }
+    .phone-capabilities { gap: 10px; margin-top: 14px; }
+    .phone-app-detail { padding-bottom: 12px; }
+    .phone-app-detail a { margin-top: 5px; }
+  }
+  @media (max-height: 620px) and (min-aspect-ratio: 6/5) {
+    .phone-showcase[data-slide] { grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); grid-template-areas: 'heading phone' 'details phone'; gap: 8px 18px; }
+    .phone-showcase-heading { display: flex; align-items: center; gap: 12px; padding-top: 0; }
+    .phone-showcase-heading > .eyebrow { display: none; }
+    .phone-showcase h2 { font-size: 24px; }
+    .phone-app-tabs { display: flex; flex-shrink: 0; margin: 0; padding: 3px; gap: 2px; }
+    .phone-app-tabs button { width: 44px; min-height: 44px; padding: 4px; }
+    .phone-app-tabs button > span { display: none; }
+    .phone-app-tabs img { width: 24px; height: 24px; }
+    .phone-app-detail { align-self: start; padding-bottom: 0; }
+    .phone-app-description, .phone-app-detail .mini-label, .phone-capability-full { display: none; }
+    .phone-app-detail h3 { font-size: 16px; margin: 0; }
+    .phone-capabilities { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 12px; margin-top: 8px; }
+    .phone-capability-compact { display: block; font-size: 11px; line-height: 1.4; }
+    .phone-app-detail a { font-size: 10px; min-height: 34px; margin-top: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) { .phone-app-facts { animation: none; } }
+}

@@ -1,0 +1,19 @@
+@layer journey {
+  html[data-presentation='true'] { scrollbar-width: none; overscroll-behavior-y: none; }
+  html[data-presentation='true']::-webkit-scrollbar { display: none; }
+  html[data-presentation='true'] [data-slide] { visibility: hidden; opacity: 0; transition: none; }
+  html[data-presentation='true'] [data-slide][data-slide-visible='true'] { visibility: visible; opacity: 1; }
+  html[data-presentation='true'] .sky-content [data-slide].reveal,
+  html[data-presentation='true'] .sky-content [data-slide] .reveal { translate: none; }
+  html[data-presentation='true'] .sky-content [data-slide][data-slide-visible='true'].reveal,
+  html[data-presentation='true'] .sky-content [data-slide][data-slide-visible='true'] .reveal { opacity: 1; }
+  html[data-presentation='true'] [data-slide]:not(.hero) { clip-path: inset(var(--slide-clip-top, 0px) 0 var(--slide-clip-bottom, 0px) 0); }
+  .marquee { display: none; }
+  :where(html[data-presentation='true']) [data-slide]:not(.hero) { min-height: calc(100svh - 176px); padding-block: 36px 64px; }
+  .ai-diagram-footer { min-height: 60px; }
+  .page-coordinate { display: none; }
+  @media (max-width: 760px) {
+    :where(html[data-presentation='true']) [data-slide]:not(.hero) { min-height: calc(100svh - 166px); }
+  }
+  @media print { [data-slide]:not(.hero) { min-height: 0; } }
+}

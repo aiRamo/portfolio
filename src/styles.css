@@ -194,6 +194,7 @@
   .stats p { font-size: 12px; margin-top: 7px; }
   .notes { border-top: 1px solid rgb(var(--line)); padding-block: 75px 80px; }
   .notes-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 60px; }
+  @media (min-width: 1001px) { .notes-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 36px; } }
   .note { border-top: 1px solid rgb(var(--line)); padding: 27px 0 38px; }
   .note-top { display: flex; justify-content: space-between; align-items: center; color: rgb(var(--muted)); font-size: 9px; letter-spacing: .1em; }
   .note h3 { font-size: 29px; letter-spacing: -.045em; margin-top: 30px; }
