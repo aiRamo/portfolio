@@ -141,7 +141,7 @@ export async function createPhoneScene(host: HTMLDivElement, settings: { current
       request = settings.current.request
       if (target !== settings.current.selected) {
         from = elapsed >= phoneTransitionDuration ? active : -1
-        target = settings.current.selected; elapsed = settings.current.reduced ? phoneTransitionDuration : from < 0 ? 1.52 : 0
+        target = settings.current.selected; elapsed = 0
         host.dataset.phoneApp = ''; lastPhase = ''
         paint()
       }
