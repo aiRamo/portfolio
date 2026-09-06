@@ -1,0 +1,16 @@
+@layer journey {
+  .skills { padding-block: 75px 80px; border-top: 1px solid rgb(var(--ink) / .2); }
+  .skills .section-heading > p { max-width: 410px; }
+  .skills-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px 36px; }
+  .skill-group { padding-top: 20px; border-top: 1px solid rgb(var(--ink) / .2); }
+  .skill-group > .mini-label { color: rgb(var(--muted)); font-size: 11px; }
+  .skill-group h3 { margin-top: 10px; font-family: 'Fraunces Variable', serif; font-size: 25px; font-weight: 450; line-height: 1.25; letter-spacing: -.03em; }
+  .skill-group ul { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; padding: 0; margin: 20px 0 0; }
+  .skill-group li { padding: 6px 10px; border: 1px solid rgb(var(--ink) / .16); border-radius: 6px; background: rgb(var(--panel) / .3); font-size: 13px; line-height: 1.45; }
+  @media (max-width: 1100px) { .skills-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; } }
+  @media (max-width: 760px) {
+    .skills-grid { grid-template-columns: 1fr; }
+    .skills .section-heading { gap: 24px; }
+    .skill-group h3 { font-size: 24px; }
+  }
+}

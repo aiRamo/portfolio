@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { ArrowDownRight, ChevronDown, Mountain } from 'lucide-react'
 
-const sections = [['work', 'Work'], ['about', 'About'], ['contact', 'Contact']] as const
+const sections = [['work', 'Work'], ['about', 'About'], ['skills', 'Skills'], ['contact', 'Contact']] as const
 
 export function SectionNavigation({ active }: { active: string }) {
   const [open, setOpen] = useState(false)
