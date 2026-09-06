@@ -1,7 +1,7 @@
 const asset = (name: string) => `${import.meta.env.BASE_URL}apps/${name}.png`
 export const phoneApps = [
   {
-    id: 'stalker-sport', name: 'Stalker Sport', short: 'Sport', category: 'SPORTS RADAR',
+    id: 'stalker-sport', name: 'Stalker Sport', short: 'Stalker Sport', category: 'SPORTS RADAR',
     description: 'Connected radar for coaches, athletes, and professional baseball organizations.',
     screenshot: asset('stalker-sport'), icon: asset('stalker-sport-icon'), color: '#e63736',
     capabilities: [
