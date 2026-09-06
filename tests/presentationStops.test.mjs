@@ -1,19 +1,23 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { panelStops, nearestStop, swipeDirection, wheelGesture } from '../src/presentationStops.mjs'
+import { panelRange, containedScrollAt, nearestStop, swipeDirection, wheelGesture } from '../src/presentationStops.mjs'
 
 test('each short section has one stop, while long sections remain fully readable', () => {
-  assert.deepEqual(panelStops(0, 1900, 700, true), [0])
-  assert.deepEqual(panelStops(900, 700, 700), [900])
+  assert.deepEqual(panelRange(0, 1900, 700, true), { top: 0, end: 0 })
+  assert.deepEqual(panelRange(900, 700, 700), { top: 900, end: 900 })
   for (const available of [180, 400, 724]) {
-    const stops = panelStops(1200, 2300, available)
-    assert.equal(stops[0], 1200)
-    assert.equal(stops.at(-1) + available, 3500)
-    for (let i = 1; i < stops.length; i++) {
-      assert.ok(stops[i] > stops[i - 1])
-      assert.ok(stops[i] - stops[i - 1] <= available)
-    }
+    const range = panelRange(1200, 2300, available)
+    assert.equal(range.top, 1200)
+    assert.equal(range.end + available, 3500)
   }
+})
+test('long sections follow input distance and contain overscroll in both directions', () => {
+  assert.equal(containedScrollAt(1200, 37, 1200, 2800), 1237)
+  assert.equal(containedScrollAt(1237, 19, 1200, 2800), 1256)
+  assert.equal(containedScrollAt(1256, -12, 1200, 2800), 1244)
+  assert.equal(containedScrollAt(2750, 500, 1200, 2800), 2800)
+  assert.equal(containedScrollAt(1250, -500, 1200, 2800), 1200)
+  assert.equal(nearestStop([{ top: 100, end: 2000 }, { top: 2200, end: 2300 }], 1900), 0)
 })
 test('trackpad momentum cannot advance through multiple sections', () => {
   const gesture = wheelGesture()

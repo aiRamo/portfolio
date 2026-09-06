@@ -1,8 +1,8 @@
 import { sectionScrollAt, sectionScrollDuration, smoothScrollStep, wheelDeltaPixels, wheelTargetAt } from './scrollMotion.mjs'
-import { isSceneScroll, nearestStop, panelStops, swipeDirection, wheelGesture } from './presentationStops.mjs'
+import { isSceneScroll, nearestStop, panelRange, containedScrollAt, swipeDirection, wheelGesture } from './presentationStops.mjs'
 import { attachFreeScroll } from './freeScroll'
 
-type Stop = { top: number; element: HTMLElement; page: number; pages: number }
+type Stop = { top: number; end: number; element: HTMLElement }
 export type PresentationState = { index: number; count: number; id: string; label: string; moving: boolean }
 
 export function attachPresentation(reduced: boolean) {
@@ -41,9 +41,10 @@ function attachDesktopPresentation(reduced: boolean, resume: boolean) {
     })
   }
   let stops: Stop[] = [], index = 0, frame = 0, initialized = false, moving = false
-  let touch: { x: number; y: number; lastY: number; lastTime: number; velocity: number; scene: boolean; blocked: boolean } | null = null
+  let touch: { x: number; y: number; lastY: number; lastTime: number; velocity: number; scene: boolean; reading: boolean; blocked: boolean } | null = null
   let resizeFrame = 0, resizePending = false, alignmentFrame = 0
   let panFrame = 0, panPosition = scrollY, panTarget = scrollY, panPrevious = 0
+  let readingFrame = 0, readingTarget = scrollY
   const gesture = wheelGesture()
   const ready = () => content.dataset.reveal === 'content'
   const offset = () => parseFloat(getComputedStyle(root).scrollPaddingTop) || 110
@@ -60,11 +61,11 @@ function attachDesktopPresentation(reduced: boolean, resume: boolean) {
   const measure = () => {
     const available = Math.max(180, innerHeight - offset() - 66)
     const max = Math.max(0, root.scrollHeight - innerHeight)
-    stops = panels.flatMap(element => {
+    stops = panels.map(element => {
       // Decorative bottom spacing must never create an almost-empty extra stop.
       const contentHeight = element.offsetHeight - (parseFloat(getComputedStyle(element).paddingBottom) || 0)
-      const positions = panelStops(Math.max(0, layoutTop(element) - offset()), contentHeight, available, element.id === 'home')
-      return positions.map((top: number, page: number) => ({ top: Math.min(max, Math.round(top)), element, page, pages: positions.length }))
+      const range = panelRange(Math.max(0, layoutTop(element) - offset()), contentHeight, available, element.id === 'home')
+      return { top: Math.min(max, Math.round(range.top)), end: Math.min(max, Math.round(range.end)), element }
     })
   }
   const publish = (inMotion: boolean) => {
@@ -73,23 +74,23 @@ function attachDesktopPresentation(reduced: boolean, resume: boolean) {
     // Keep the departing slide's animation alive until it has scrolled away.
     // The destination starts its visit only when we arrive.
     if (!inMotion) root.dataset.presentationSection = stop.element.id
-    root.dataset.navigationMode = index === 0 && !inMotion ? 'scene' : 'slides'
+    root.dataset.navigationMode = index === 0 && !inMotion ? 'scene' : stop.end > stop.top && !inMotion ? 'contained' : 'slides'
     root.dataset.sectionScrolling = String(inMotion)
-    const detail: PresentationState = { index, count: stops.length, id: stop.element.id, label: `${stop.element.dataset.slide}${stop.pages > 1 ? ` · ${stop.page + 1}/${stop.pages}` : ''}`, moving: inMotion }
+    const detail: PresentationState = { index, count: stops.length, id: stop.element.id, label: stop.element.dataset.slide!, moving: inMotion }
     document.dispatchEvent(new CustomEvent('presentationchange', { detail }))
   }
-  const finish = (focus = false) => {
+  const finish = (focus = false, position = stops[index].top) => {
     frame = 0; moving = false
     if (resizePending) {
       const old = stops[index]
       measure()
-      const matching = stops.map((stop, i) => ({ stop, i })).filter(({ stop }) => stop.element === old.element)
-      index = matching[Math.min(old.page, matching.length - 1)]?.i ?? nearestStop(stops, scrollY)
+      index = stops.findIndex(stop => stop.element === old.element)
       resizePending = false
     }
     const stop = stops[index]
-    window.scrollTo({ top: stop.top, behavior: 'instant' })
-    panPosition = panTarget = stop.top
+    const settled = containedScrollAt(position, 0, stop.top, stop.end)
+    window.scrollTo({ top: settled, behavior: 'instant' })
+    panPosition = panTarget = readingTarget = settled
     if (index === 0) showScene()
     else { isolate(stop.element); crop() }
     if (location.hash !== `#${stop.element.id}`) history.replaceState(history.state, '', `#${stop.element.id}`)
@@ -106,6 +107,34 @@ function attachDesktopPresentation(reduced: boolean, resume: boolean) {
   const stopPan = () => {
     cancelAnimationFrame(panFrame); panFrame = 0
     panPosition = panTarget = scrollY
+  }
+  const stopReading = () => { cancelAnimationFrame(readingFrame); readingFrame = 0; readingTarget = scrollY }
+  const canRead = (delta: number) => {
+    const stop = stops[index]
+    return stop && stop.end > stop.top && (delta > 0 ? scrollY < stop.end - .5 : delta < 0 && scrollY > stop.top + .5)
+  }
+  const read = (delta: number, smooth = true) => {
+    const stop = stops[index]
+    if (!readingFrame) readingTarget = scrollY
+    // Reverse immediately, without first completing queued movement in the other direction.
+    const base = (readingTarget - scrollY) * delta < 0 ? scrollY : readingTarget
+    readingTarget = containedScrollAt(base, delta, stop.top, stop.end)
+    cancelAnimationFrame(alignmentFrame); alignmentFrame = 0
+    if (!smooth || reduced) {
+      cancelAnimationFrame(readingFrame); readingFrame = 0
+      window.scrollTo({ top: readingTarget, behavior: 'instant' }); crop(); return
+    }
+    if (readingFrame) return
+    let previous = performance.now()
+    const tick = (now: number) => {
+      let position = smoothScrollStep(scrollY, readingTarget, Math.min((now - previous) / 1000, .064))
+      previous = now
+      if (Math.abs(position - readingTarget) < 1) position = readingTarget
+      window.scrollTo({ top: position, behavior: 'instant' }); crop()
+      if (Math.abs(scrollY - readingTarget) > 1) readingFrame = requestAnimationFrame(tick)
+      else { window.scrollTo({ top: readingTarget, behavior: 'instant' }); readingFrame = 0; crop() }
+    }
+    readingFrame = requestAnimationFrame(tick)
   }
   const renderPan = () => {
     window.scrollTo({ top: panPosition, behavior: 'instant' })
@@ -146,11 +175,13 @@ function attachDesktopPresentation(reduced: boolean, resume: boolean) {
     }
     panFrame = requestAnimationFrame(tick)
   }
-  const go = (next: number, focus = false) => {
+  const go = (next: number, focus = false, atEnd = false) => {
     if (!initialized || !ready() || !stops.length) return
-    next = Math.max(0, Math.min(stops.length - 1, next))
-    if (next === index && Math.abs(scrollY - stops[next].top) < 2 && !panFrame) return
+    if (next < 0 || next >= stops.length) return
+    const destination = atEnd ? stops[next].end : stops[next].top
+    if (next === index && Math.abs(scrollY - destination) < 2 && !panFrame) return
     cancelAnimationFrame(frame)
+    stopReading()
     stopPan()
     cancelAnimationFrame(alignmentFrame); alignmentFrame = 0
     index = next; moving = true
@@ -160,11 +191,11 @@ function attachDesktopPresentation(reduced: boolean, resume: boolean) {
     crop()
     publish(true)
     const start = scrollY, began = performance.now()
-    const duration = sectionScrollDuration(stops[index].top - start, reduced)
+    const duration = sectionScrollDuration(destination - start, reduced)
     const tick = (now: number) => {
-      window.scrollTo({ top: sectionScrollAt(start, stops[index].top, now - began, duration), behavior: 'instant' })
+      window.scrollTo({ top: sectionScrollAt(start, destination, now - began, duration), behavior: 'instant' })
       crop()
-      if (now - began >= duration) finish(focus)
+      if (now - began >= duration) finish(focus, destination)
       else frame = requestAnimationFrame(tick)
     }
     frame = requestAnimationFrame(tick)
@@ -178,7 +209,7 @@ function attachDesktopPresentation(reduced: boolean, resume: boolean) {
   }
   const initialize = () => {
     if (initialized || !ready()) return
-    measure(); initialized = true; index = resume ? nearestStop(stops, scrollY) : fromHash(); finish()
+    measure(); initialized = true; index = resume ? nearestStop(stops, scrollY) : fromHash(); finish(false, resume ? scrollY : stops[index].top)
   }
   const editable = (target: EventTarget | null) => target instanceof Element && !!target.closest('input,textarea,select,[contenteditable="true"],[data-native-scroll]')
   const wheel = (event: WheelEvent) => {
@@ -186,6 +217,11 @@ function attachDesktopPresentation(reduced: boolean, resume: boolean) {
     if (!event.cancelable) return
     event.preventDefault()
     const delta = wheelDeltaPixels(event.deltaY, event.deltaMode, innerHeight)
+    if (!moving && ready() && canRead(delta)) {
+      gesture(delta, performance.now(), true)
+      read(delta)
+      return
+    }
     if (!moving && ready() && isSceneScroll(index, delta)) {
       // Consume this gesture at the boundary so its momentum cannot skip the intro.
       gesture(delta, performance.now(), true)
@@ -193,12 +229,13 @@ function attachDesktopPresentation(reduced: boolean, resume: boolean) {
       return
     }
     const direction = gesture(delta, performance.now(), moving || !ready())
-    if (direction) go(index + direction)
+    if (direction) go(index + direction, false, direction < 0)
   }
   const touchStart = (event: TouchEvent) => {
     if (event.touches.length !== 1 || editable(event.target)) { touch = null; return }
     stopPan()
-    touch = { x: event.touches[0].clientX, y: event.touches[0].clientY, lastY: event.touches[0].clientY, lastTime: performance.now(), velocity: 0, scene: index === 0, blocked: moving || !ready() }
+    stopReading()
+    touch = { x: event.touches[0].clientX, y: event.touches[0].clientY, lastY: event.touches[0].clientY, lastTime: performance.now(), velocity: 0, scene: index === 0, reading: false, blocked: moving || !ready() }
   }
   const touchMove = (event: TouchEvent) => {
     if (event.touches.length !== 1) { touch = null; return }
@@ -208,6 +245,13 @@ function attachDesktopPresentation(reduced: boolean, resume: boolean) {
     if (event.cancelable) event.preventDefault()
     if (touch.blocked) return
     const delta = touch.lastY - point.clientY, now = performance.now()
+    if (!touch.scene && (touch.reading || canRead(delta))) {
+      touch.reading = true
+      touch.velocity = delta / Math.max(8, now - touch.lastTime)
+      read(delta, false)
+      touch.lastY = point.clientY; touch.lastTime = now
+      return
+    }
     if (index === 1 && dy > 0) touch.scene = true
     if (touch.scene) {
       touch.velocity = delta / Math.max(8, now - touch.lastTime)
@@ -218,6 +262,10 @@ function attachDesktopPresentation(reduced: boolean, resume: boolean) {
   const touchEnd = (event: TouchEvent) => {
     const start = touch; touch = null
     if (!start || start.blocked || moving || !event.changedTouches.length) return
+    if (start.reading) {
+      if (performance.now() - start.lastTime < 100) read(start.velocity * 120)
+      return
+    }
     if (start.scene) {
       // A short, bounded coast keeps touch movement continuous without skipping a slide.
       if (index === 0 && performance.now() - start.lastTime < 100) pan(start.velocity * 120)
@@ -225,7 +273,7 @@ function attachDesktopPresentation(reduced: boolean, resume: boolean) {
     }
     const dx = event.changedTouches[0].clientX - start.x, dy = event.changedTouches[0].clientY - start.y
     const direction = swipeDirection(dx, dy)
-    if (direction) go(index + direction)
+    if (direction) go(index + direction, false, direction < 0)
   }
   const touchCancel = () => { touch = null }
   const key = (event: KeyboardEvent) => {
@@ -238,11 +286,15 @@ function attachDesktopPresentation(reduced: boolean, resume: boolean) {
     const direction = ['ArrowDown', 'PageDown', ' '].includes(event.key) ? (event.shiftKey ? -1 : 1) : ['ArrowUp', 'PageUp'].includes(event.key) ? -1 : 0
     if (!direction && !['Home', 'End'].includes(event.key)) return
     event.preventDefault()
+    if (!moving && ready() && direction && canRead(direction)) {
+      read(direction * (event.key.startsWith('Arrow') ? 60 : innerHeight * .85))
+      return
+    }
     if (!moving && direction && isSceneScroll(index, direction)) {
       pan(direction * (event.key.startsWith('Arrow') ? 60 : innerHeight * .85))
       return
     }
-    if (!moving && !event.repeat) go(event.key === 'Home' ? 0 : event.key === 'End' ? stops.length - 1 : index + direction, true)
+    if (!moving && !event.repeat) go(event.key === 'Home' ? 0 : event.key === 'End' ? stops.length - 1 : index + direction, true, direction < 0 || event.key === 'End')
   }
   const click = (event: MouseEvent) => {
     if (event.defaultPrevented || event.button || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return
@@ -270,11 +322,12 @@ function attachDesktopPresentation(reduced: boolean, resume: boolean) {
       return
     }
     // Native focus scrolling must not pull an otherwise stationary slide out of its frame.
-    if (Math.abs(scrollY - stops[index].top) < 2) return
+    const bounded = containedScrollAt(scrollY, 0, stops[index].top, stops[index].end)
+    if (Math.abs(scrollY - bounded) < 2) { crop(); return }
     alignmentFrame = requestAnimationFrame(() => {
       alignmentFrame = 0
       if (moving || !ready()) return
-      window.scrollTo({ top: stops[index].top, behavior: 'instant' })
+      window.scrollTo({ top: containedScrollAt(scrollY, 0, stops[index].top, stops[index].end), behavior: 'instant' })
       crop()
     })
   }
@@ -284,6 +337,8 @@ function attachDesktopPresentation(reduced: boolean, resume: boolean) {
       if (!initialized) return
       if (moving) { resizePending = true; return }
       const old = stops[index]
+      const readingOffset = scrollY - old.top
+      stopReading()
       const previousEnd = sceneEnd()
       measure()
       if (index === 0) {
@@ -293,9 +348,8 @@ function attachDesktopPresentation(reduced: boolean, resume: boolean) {
         showScene(); renderPan()
         return
       }
-      const matching = stops.map((stop, i) => ({ stop, i })).filter(({ stop }) => stop.element === old.element)
-      index = matching[Math.min(old.page, matching.length - 1)]?.i ?? nearestStop(stops, scrollY)
-      finish()
+      index = stops.findIndex(stop => stop.element === old.element)
+      finish(false, stops[index].top + readingOffset)
     })
   }
   const observer = new MutationObserver(initialize)
@@ -317,7 +371,7 @@ function attachDesktopPresentation(reduced: boolean, resume: boolean) {
   document.addEventListener('click', click)
   initialize()
   return () => {
-    cancelAnimationFrame(frame); cancelAnimationFrame(panFrame); cancelAnimationFrame(resizeFrame); cancelAnimationFrame(alignmentFrame); observer.disconnect(); resize.disconnect()
+    cancelAnimationFrame(frame); cancelAnimationFrame(panFrame); cancelAnimationFrame(readingFrame); cancelAnimationFrame(resizeFrame); cancelAnimationFrame(alignmentFrame); observer.disconnect(); resize.disconnect()
     removeEventListener('wheel', wheel); removeEventListener('touchstart', touchStart); removeEventListener('touchmove', touchMove)
     removeEventListener('touchend', touchEnd); removeEventListener('touchcancel', touchCancel); removeEventListener('keydown', key)
     removeEventListener('resize', resized); removeEventListener('popstate', historyChange); removeEventListener('hashchange', historyChange)

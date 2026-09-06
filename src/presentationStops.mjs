@@ -1,12 +1,15 @@
-export function panelStops(top, height, available, isHome = false) {
-  if (isHome) return [0]
-  const span = Math.max(0, height - available)
-  const pages = Math.ceil(span / (available * .85))
-  return Array.from({ length: pages + 1 }, (_, page) => top + Math.min(page * available * .85, span))
+// A long panel has one continuous reading range, rather than intermediate pages.
+export function panelRange(top, height, available, isHome = false) {
+  return isHome ? { top: 0, end: 0 } : { top, end: top + Math.max(0, height - available) }
+}
+
+export function containedScrollAt(position, delta, top, end) {
+  return Math.max(top, Math.min(end, position + delta))
 }
 
 export function nearestStop(stops, position) {
-  return stops.reduce((best, stop, index) => Math.abs(stop.top - position) < Math.abs(stops[best].top - position) ? index : best, 0)
+  const distance = stop => Math.abs(position - containedScrollAt(position, 0, stop.top, stop.end ?? stop.top))
+  return stops.reduce((best, stop, index) => distance(stop) < distance(stops[best]) ? index : best, 0)
 }
 
 export function swipeDirection(dx, dy) {
