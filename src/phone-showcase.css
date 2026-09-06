@@ -1,4 +1,5 @@
 @layer journey {
+  .phone-showcase + .ai-adoption { margin-top: clamp(96px, 14svh, 160px); }
   .phone-showcase[data-slide] { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); grid-template-areas: 'heading phone' 'details phone'; gap: 22px clamp(28px, 5vw, 78px); height: calc(100svh - 176px); min-height: 0; padding: 0; }
   .phone-showcase-heading { grid-area: heading; min-width: 0; padding-top: 8px; }
   .phone-showcase-heading > .eyebrow { margin-bottom: 12px; font-size: 9px; }
