@@ -8,7 +8,7 @@
   .hero::after { display: none; }
   .hero-stage { position: sticky; top: 0; height: 100svh; width: 100%; overflow: hidden; }
   .hero-stage::after { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: var(--hero-visibility); background: linear-gradient(90deg, #07191450, transparent 58%), linear-gradient(0deg, #061710c2, transparent 37%), linear-gradient(180deg, #0b1f2526, transparent 20%); }
-  .hero-copy, .hero-bottom, .landscape-note { opacity: var(--hero-visibility); translate: 0 calc(var(--pan-progress) * -90px); }
+  .hero-copy, .hero-bottom { opacity: var(--hero-visibility); translate: 0 calc(var(--pan-progress) * -90px); }
   :root[data-hero-visible='false'] .hero-stage { visibility: hidden; }
   .valley-fallback { opacity: var(--hero-visibility); }
 
@@ -50,7 +50,7 @@
   }
   @media (prefers-reduced-motion: reduce) {
     .sky-content .reveal { translate: none; opacity: 1; }
-    .hero-copy, .hero-bottom, .landscape-note { translate: none; }
+    .hero-copy, .hero-bottom { translate: none; }
   }
   @media print {
     .scene-backdrop, .sky-pause { display: none; }
