@@ -10,6 +10,16 @@ export function wheelDeltaPixels(delta, mode, viewportHeight) {
   return delta * (mode === 1 ? 16 : mode === 2 ? viewportHeight : 1)
 }
 
+/** Retain subpixel progress even when the browser rounds the rendered scroll position. */
+export function createScrollSmoother(initialPosition) {
+  let position = initialPosition
+  return (target, seconds) => {
+    position = smoothScrollStep(position, target, seconds)
+    if (Math.abs(position - target) < .5) position = target
+    return position
+  }
+}
+
 export function wheelTargetAt(position, target, delta, maximum) {
   // A reversal responds immediately instead of fighting the previous input's remaining travel.
   const reversing = delta * (target - position) < 0

@@ -1,6 +1,20 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { smoothScrollStep, wheelDeltaPixels, wheelTargetAt, sectionScrollAt, sectionScrollDuration } from '../src/scrollMotion.mjs'
+import { smoothScrollStep, createScrollSmoother, wheelDeltaPixels, wheelTargetAt, sectionScrollAt, sectionScrollDuration } from '../src/scrollMotion.mjs'
+
+test('contained scrolling reaches both boundaries despite browser pixel rounding', () => {
+  for (const fps of [60, 120, 144, 240]) {
+    const advance = createScrollSmoother(5651)
+    for (const target of [6438, 5651]) {
+      let rendered = -1
+      for (let frame = 0; frame < fps * 3; frame++) {
+        rendered = Math.round(advance(target, 1 / fps))
+      }
+      assert.equal(rendered, target, `boundary ${target} must be reachable at ${fps}fps`)
+      assert.equal(advance(target, 1 / fps), target)
+    }
+  }
+})
 
 test('a wheel tick flows through intermediate positions, then stops exactly without overshoot', () => {
   let position = 0

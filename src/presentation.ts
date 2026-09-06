@@ -1,4 +1,4 @@
-import { sectionScrollAt, sectionScrollDuration, smoothScrollStep, wheelDeltaPixels, wheelTargetAt } from './scrollMotion.mjs'
+import { sectionScrollAt, sectionScrollDuration, smoothScrollStep, createScrollSmoother, wheelDeltaPixels, wheelTargetAt } from './scrollMotion.mjs'
 import { isSceneScroll, nearestStop, panelRange, containedScrollAt, swipeDirection, wheelGesture } from './presentationStops.mjs'
 import { attachFreeScroll } from './freeScroll'
 
@@ -122,12 +122,12 @@ function attachDesktopPresentation(reduced: boolean, resume: boolean) {
     cancelAnimationFrame(alignmentFrame); alignmentFrame = 0
     if (readingFrame) return
     let previous = performance.now()
+    const advance = createScrollSmoother(scrollY)
     const tick = (now: number) => {
-      let position = smoothScrollStep(scrollY, readingTarget, Math.min((now - previous) / 1000, .064) * (reduced ? 2 : 1))
+      const position = advance(readingTarget, Math.min((now - previous) / 1000, .064) * (reduced ? 2 : 1))
       previous = now
-      if (Math.abs(position - readingTarget) < 1) position = readingTarget
       window.scrollTo({ top: position, behavior: 'instant' }); crop()
-      if (Math.abs(scrollY - readingTarget) > 1) readingFrame = requestAnimationFrame(tick)
+      if (position !== readingTarget) readingFrame = requestAnimationFrame(tick)
       else { window.scrollTo({ top: readingTarget, behavior: 'instant' }); readingFrame = 0; crop() }
     }
     readingFrame = requestAnimationFrame(tick)
