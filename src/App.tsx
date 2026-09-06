@@ -4,6 +4,7 @@ import { useAtmosphere } from './useAtmosphere'
 import { useScrollJourney } from './useScrollJourney'
 import { profile, projects, fieldNotes } from './content'
 import { SceneLoader, SceneBoundary } from './SceneLoader'
+import { SectionNavigation } from './SectionNavigation'
 
 const Valley = lazy(() => import('./Valley'))
 
@@ -86,7 +87,7 @@ export default function App() {
     <a className="skip-link" href="#work">Skip to selected work</a>
     <div className="reading-progress" ref={progress} aria-hidden="true" />
     <div className="light-wash" aria-hidden="true" />
-    <header className="site-header"><a href="#home" className="wordmark" aria-label="Adrian Ramos, back to top"><span className="brand-icon"><Mountain size={22} strokeWidth={1.5} /></span><span>adrian ramos<span className="wordmark-dot">.</span></span></a><nav aria-label="Main navigation"><a href="#work" aria-current={active === 'work' ? 'location' : undefined}>Work</a><a href="#about" aria-current={active === 'about' ? 'location' : undefined}>About</a><a href="#contact" aria-current={active === 'contact' ? 'location' : undefined}>Contact <ArrowUpRight size={13} /></a></nav><button className="theme-toggle" onClick={toggle} aria-label={`Switch to ${dark ? 'day' : 'night'} mode`} aria-pressed={dark} title={`Bring on the ${dark ? 'sunrise' : 'moonlight'}`}><Sun size={16} /><span className="toggle-track"><span className="toggle-thumb" /></span><Moon size={15} /></button></header>
+    <header className="site-header"><SectionNavigation active={active} /><button className="theme-toggle" onClick={toggle} aria-label={`Switch to ${dark ? 'day' : 'night'} mode`} aria-pressed={dark} title={`Bring on the ${dark ? 'sunrise' : 'moonlight'}`}><Sun size={16} /><span className="toggle-track"><span className="toggle-thumb" /></span><Moon size={15} /></button></header>
 
     <main>
       <section className="hero" id="home" data-section>

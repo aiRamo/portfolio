@@ -15,3 +15,16 @@ export function wheelTargetAt(position, target, delta, maximum) {
   const reversing = delta * (target - position) < 0
   return clamp((reversing ? position : target) + delta, 0, Math.max(0, maximum))
 }
+
+/** Deliberate section navigation has a finite eased arrival, in either direction. */
+export function sectionScrollDuration(distance, reduced = false) {
+  const duration = clamp(700 + Math.sqrt(Math.abs(distance)) * 11, 800, 1800)
+  // Explicit navigation still moves visibly; reduced motion shortens the journey.
+  return reduced ? Math.min(duration, 700) : duration
+}
+
+export function sectionScrollAt(start, end, elapsed, duration) {
+  const t = clamp(duration > 0 ? elapsed / duration : 1, 0, 1)
+  const ease = t * t * t * (t * (t * 6 - 15) + 10)
+  return start + (end - start) * ease
+}

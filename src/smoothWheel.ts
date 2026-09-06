@@ -52,7 +52,7 @@ export function attachSmoothWheel() {
   addEventListener('hashchange', stop)
   addEventListener('blur', stop)
   document.addEventListener('visibilitychange', visibility)
-  return () => {
+  const dispose = () => {
     stop()
     removeEventListener('wheel', wheel); removeEventListener('scroll', nativeScroll)
     removeEventListener('pointerdown', stop); removeEventListener('touchstart', stop)
@@ -60,4 +60,5 @@ export function attachSmoothWheel() {
     document.removeEventListener('visibilitychange', visibility)
     delete root.dataset.wheelSmoothing
   }
+  return { stop, dispose }
 }

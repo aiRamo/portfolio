@@ -34,7 +34,7 @@
   .page-coordinate { color: rgb(var(--ink) / .7); }
 
   @media (max-width: 760px) {
-    html { scroll-padding-top: 135px; }
+    html { scroll-padding-top: 100px; }
     .hero-stage::after { background: linear-gradient(0deg, #05150ede, #081b1733 53%, transparent 75%), linear-gradient(180deg, #10283750, transparent 23%); }
     .intro { min-height: 76svh; padding-block: 80px 95px; }
     .intro h2 { font-size: clamp(37px, 8vw, 48px); }

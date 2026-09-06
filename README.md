@@ -32,6 +32,8 @@ See the [official Vite deployment guide](https://vite.dev/guide/static-deploy#gi
 
 - `src/content.ts`: verified project descriptions, engineering details, email, and profile links.
 - `src/App.tsx`: page sections and conceptual project interface studies.
+- `src/SectionNavigation.tsx`: name-triggered Work/About/Contact dropdown with keyboard navigation and outside-tap dismissal.
+- `src/anchorScroll.ts`: cancellable, eased same-page navigation shared by all section links, with header offsets and destination focus.
 - `src/styles.css`: responsive layout, typography, theme tokens, and scroll effects.
 - `src/Valley.tsx`: React lifecycle and WebGL fallback.
 - `src/SceneLoader.tsx` and `src/loader.css`: fullscreen branded progress screen, accessible loading state, and scene-ready reveal.

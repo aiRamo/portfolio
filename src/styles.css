@@ -45,11 +45,18 @@
   .wordmark { display: inline-flex; align-items: center; gap: 9px; font-size: 21px; font-weight: 650; letter-spacing: -.9px; white-space: nowrap; }
   .brand-icon { margin-right: 6px; }
   .wordmark-dot { color: rgb(var(--accent)); }
-  .site-header nav { margin-left: auto; display: flex; gap: 36px; align-items: center; }
-  .site-header nav a { display: flex; align-items: center; gap: 4px; font-size: 13px; padding-block: 8px; position: relative; }
-  .site-header nav a::after { content: ''; position: absolute; left: 0; right: 0; bottom: 1px; height: 1px; transform: scaleX(0); background: currentColor; transform-origin: left; transition: transform .25s; }
-  .site-header nav a:hover::after, .site-header nav a[aria-current]::after { transform: scaleX(1); }
-  .theme-toggle { display: flex; align-items: center; gap: 9px; border: 1px solid rgb(var(--line)); padding: 10px 12px; border-radius: 50px; min-height: 44px; }
+  .brand-navigation { position: relative; min-width: 0; }
+  .brand-trigger { min-height: 44px; text-align: left; text-shadow: inherit; }
+  .navigation-chevron { margin-left: 2px; opacity: .7; transition: transform .22s ease, opacity .22s ease; }
+  .brand-trigger[aria-expanded='true'] .navigation-chevron { transform: rotate(180deg); opacity: 1; }
+  .section-navigation { position: absolute; top: calc(100% + 12px); left: 0; width: 248px; max-width: calc(100vw - 44px); padding: 8px; border: 1px solid rgb(var(--ink) / .14); border-radius: 17px; background: rgb(var(--panel) / .94); color: rgb(var(--ink)); text-shadow: none; backdrop-filter: blur(22px); box-shadow: 0 18px 48px #071b3533, inset 0 1px rgb(var(--page) / .4); animation: navigation-enter .2s cubic-bezier(.2,.7,.2,1) both; }
+  .section-navigation a { display: grid; grid-template-columns: 24px 1fr 17px; align-items: center; gap: 12px; min-height: 52px; padding: 10px 12px; border-radius: 10px; font-size: 15px; font-weight: 500; }
+  .section-navigation a:hover, .section-navigation a:focus-visible, .section-navigation a[aria-current] { background: rgb(var(--ink) / .08); }
+  .section-navigation a:focus-visible { outline-offset: -2px; }
+  .navigation-index { color: rgb(var(--muted)); font-size: 10px; letter-spacing: .06em; font-variant-numeric: tabular-nums; }
+  .section-navigation a > svg { opacity: .55; }
+  @keyframes navigation-enter { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+  .theme-toggle { display: flex; align-items: center; gap: 9px; margin-left: auto; flex-shrink: 0; border: 1px solid rgb(var(--line)); padding: 10px 12px; border-radius: 50px; min-height: 44px; }
   .toggle-track { height: 15px; width: 29px; background: rgb(var(--ink) / .12); display: block; border-radius: 20px; padding: 3px; }
   .toggle-thumb { display: block; width: 9px; height: 9px; border-radius: 50%; background: rgb(var(--ink)); transform: translateX(calc(var(--night) * 14px)); }
   .section-heading h2, .about-heading h2, .contact h2 { background: linear-gradient(110deg, rgb(var(--ink)) 5%, color-mix(in srgb, rgb(var(--ink)), #e2a463 calc(var(--twilight) * 56%)) var(--light-x), rgb(var(--ink)) 100%); background-clip: text; -webkit-background-clip: text; color: transparent; }
@@ -240,11 +247,9 @@
   @media (max-width: 760px) {
     html { scroll-padding-top: 30px; }
     .section-shell { width: calc(100% - 44px); }
-    .site-header { padding: 22px; gap: 16px; flex-wrap: wrap; }
+    .site-header { padding: 22px; gap: 16px; }
     .wordmark { font-size: 19px; }
     .brand-icon { margin-right: 0; }
-    .site-header nav { order: 3; width: 100%; justify-content: flex-end; gap: 26px; margin-top: -3px; }
-    .site-header nav a { font-size: 12px; }
     .theme-toggle { margin-left: auto; padding: 8px 10px; gap: 7px; }
     .intro { grid-template-columns: 1fr; padding-block: 75px; gap: 28px; }
     .section-kicker { font-size: 8px; }
@@ -332,6 +337,9 @@
   @media (max-width: 370px) {
     .site-header { gap: 10px; }
     .wordmark { font-size: 17px; }
+    .brand-trigger { gap: 6px; }
+    .brand-trigger .brand-icon svg { width: 18px; height: 18px; }
+    .navigation-chevron { width: 12px; margin-left: 0; }
     .theme-toggle { gap: 5px; padding-inline: 8px; }
     .project-art { height: 435px; }
     .phone { transform: rotate(-7deg) scale(.8); }
@@ -369,7 +377,6 @@
     .about-card > div { line-height: 1.7; align-items: baseline; }
   }
   @media (max-width: 760px) {
-    .site-header nav { margin-top: -10px; gap: 20px; }
     .intro { grid-template-columns: 1fr; }
     .project-copy .eyebrow { font-size: .6875rem; }
     .section-heading .eyebrow, .about-heading .eyebrow { letter-spacing: .08em; }

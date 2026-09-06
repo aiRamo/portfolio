@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { smoothScrollStep, wheelDeltaPixels, wheelTargetAt } from '../src/scrollMotion.mjs'
+import { smoothScrollStep, wheelDeltaPixels, wheelTargetAt, sectionScrollAt, sectionScrollDuration } from '../src/scrollMotion.mjs'
 
 test('a wheel tick flows through intermediate positions, then stops exactly without overshoot', () => {
   let position = 0
@@ -40,4 +40,24 @@ test('wheel units normalize across pixel, line, and page based devices', () => {
   assert.equal(wheelDeltaPixels(120, 0, 900), 120)
   assert.equal(wheelDeltaPixels(3, 1, 900), 48)
   assert.equal(wheelDeltaPixels(-1, 2, 900), -900)
+})
+
+test('section links ease through intermediate positions and arrive exactly without overshoot', () => {
+  for (const [start,end] of [[0,2400],[9500,0],[1200,1250]]) for (const reduced of [false,true]) {
+    const duration = sectionScrollDuration(end-start,reduced)
+    assert.ok(duration >= 700 && duration <= 1800)
+    assert.equal(sectionScrollAt(start,end,0,duration),start)
+    assert.equal(sectionScrollAt(start,end,duration+100,duration),end)
+    let previous = start
+    for (let frame = 1; frame <= 120; frame++) {
+      const position = sectionScrollAt(start,end,duration*frame/120,duration)
+      assert.ok(position >= Math.min(start,end) && position <= Math.max(start,end))
+      assert.ok((position-previous)*(end-start) >= 0)
+      previous = position
+    }
+    const lift = Math.abs(sectionScrollAt(start,end,duration*.05,duration)-start)
+    const middle = Math.abs(sectionScrollAt(start,end,duration*.55,duration)-sectionScrollAt(start,end,duration*.50,duration))
+    const landing = Math.abs(end-sectionScrollAt(start,end,duration*.95,duration))
+    assert.ok(lift < middle*.05 && landing < middle*.05, 'both departure and arrival should ease gently')
+  }
 })
