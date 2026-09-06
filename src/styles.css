@@ -168,7 +168,8 @@
   @keyframes wander { to { transform: translateX(-50%); } }
   .about { padding-block: 130px 100px; }
   .about-heading .eyebrow { margin-bottom: 24px; font-size: 10px; }
-  .about-grid { display: grid; grid-template-columns: 1fr 1.1fr; gap: 12%; margin-top: 66px; }
+  .about-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 12%; align-items: start; }
+  .about-left { display: grid; gap: 32px; }
   .about-card { min-height: 410px; align-self: start; display: flex; flex-direction: column; align-items: flex-start; background: rgb(var(--panel)); border: 1px solid rgb(var(--line)); border-radius: 4px; padding: 40px; position: relative; overflow: hidden; }
   .about-card::before { content: ''; width: 470px; height: 470px; position: absolute; top: -200px; right: -245px; border: 1px solid rgb(var(--line)); border-radius: 50%; box-shadow: 0 0 0 35px rgb(var(--page) / .14), 0 0 0 70px rgb(var(--line) / .25), 0 0 0 105px rgb(var(--page) / .2); }
   .about-monogram { font-family: 'Fraunces Variable', serif; font-style: italic; font-size: 100px; line-height: 1; letter-spacing: -.08em; padding-right: 20px; }
@@ -186,11 +187,11 @@
   .social-links { display: flex; gap: 26px; margin-top: 29px; }
   .social-links a { display: flex; gap: 8px; align-items: center; font-size: 12px; padding-block: 8px; }
   .social-links a:hover { color: rgb(var(--accent)); }
-  .stats { display: grid; grid-template-columns: 1fr 1fr 1fr; padding-top: 58px; margin-top: 74px; border-top: 1px solid rgb(var(--line)); gap: 30px; }
-  .stats > div { padding-inline: 30px; border-left: 1px solid rgb(var(--line)); }
+  .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); padding-top: 24px; margin-top: 28px; border-top: 1px solid rgb(var(--line)); gap: 16px; }
+  .stats > div { padding-left: 16px; border-left: 1px solid rgb(var(--line)); }
   .stats > div:first-child { padding-left: 0; border: 0; }
-  .stats strong { display: flex; align-items: baseline; gap: 13px; font-family: 'Fraunces Variable', serif; font-size: 60px; font-weight: 350; letter-spacing: -.06em; }
-  .stats strong > span { font-style: italic; font-size: 25px; letter-spacing: -.04em; }
+  .stats strong { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; font-family: 'Fraunces Variable', serif; font-size: 42px; font-weight: 350; letter-spacing: -.06em; }
+  .stats strong > span { font-style: italic; font-size: 18px; letter-spacing: -.04em; }
   .stats p { font-size: 12px; margin-top: 7px; }
   .notes { border-top: 1px solid rgb(var(--line)); padding-block: 75px 80px; }
   .notes-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 60px; }
@@ -295,7 +296,7 @@
     .about { padding-block: 78px 62px; }
     .about-heading .eyebrow { font-size: 8px; }
     .about-heading h2 { font-size: 42px; }
-    .about-grid { grid-template-columns: 1fr; gap: 37px; margin-top: 40px; }
+    .about-grid { grid-template-columns: 1fr; gap: 37px; }
     .about-card { min-height: 340px; padding: 30px; }
     .about-monogram { font-size: 86px; }
     .about-card > div { font-size: 8px; margin-top: 23px; }
@@ -388,6 +389,15 @@
     footer > div { justify-content: flex-start; gap: 10px; }
     footer > span { grid-row: auto; }
     footer > div a { justify-content: flex-start; padding-left: 0; }
+  }
+  @media (min-width: 1101px) and (max-height: 850px) {
+    .about-left { gap: 24px; }
+    .about-card { min-height: 340px; padding: 24px; }
+    .about-card > div { margin-top: 20px; }
+    .about-card-footer { margin-top: 20px; }
+    .about-copy > p + p { margin-top: 16px; line-height: 1.6; }
+    .about-facts { margin-top: 18px; padding-top: 18px; }
+    .about-copy .stats { margin-top: 16px; padding-top: 18px; }
   }
   @media print {
     .site-header, .marquee, .project-visual, .page-coordinate, .reading-progress, .light-wash, .contact h2 > a, .text-link, .back-to-top { display: none; }
