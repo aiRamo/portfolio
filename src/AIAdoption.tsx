@@ -75,7 +75,7 @@ export function AIAdoption({ enabled }: { enabled: boolean }) {
       <div className="ai-copy">
         <div className="ai-heading reveal"><span className="eyebrow">BEYOND THE CODE / AI ENABLEMENT</span><h2 id="ai-adoption-title">Your next agentic engineer.<br /><em>Your team’s next advantage.</em></h2></div>
         <div className="ai-story reveal">
-        <p className="ai-lead">I helped pioneer AI-assisted engineering at Stalker Radar—and made it a practice other teams could use.</p>
+        <p className="ai-lead">I helped pioneer AI-assisted engineering at Stalker Radar and made it a practice other teams could use.</p>
         <ol className="ai-story-steps">
           <li><span>01</span><div><h3>Start with the work.</h3><p>I brought tools like Claude Code and Codex into implementation, testing, documentation, and release workflows.</p></div></li>
           <li><span>02</span><div><h3>Bring people along.</h3><p>I mentored engineers in agentic development and helped other teams adapt those workflows to their own work.</p></div></li>
@@ -103,7 +103,7 @@ export function AIAdoption({ enabled }: { enabled: boolean }) {
           // Text and its recipient share the exact same eased progress, including pause/resume.
           const progress = motion.branches[index].node
           return <li key={recipient.label} data-visible={progress > 0} aria-hidden={progress === 0} style={{ opacity: progress, transform: `translateY(${(1 - progress) * 5}px)` }}>
-            <span className="ai-caption-dot" /><span><strong>{recipient.label}</strong> — {recipient.benefit}</span>
+            <span className="ai-caption-dot" /><span><strong>{recipient.label}</strong>: {recipient.benefit}</span>
           </li>
         })}</ul></figcaption>
         <div className="ai-diagram-footer"><span>ADOPTION, ILLUSTRATED</span><div>

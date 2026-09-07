@@ -7,8 +7,8 @@ export const profile = {
 
 export const fieldNotes = [
   { number: '01', title: 'Successful products take more than code.', text: 'I helped create new processes across engineering, marketing, and product management to streamline mobile releases. Bringing those teams together is part of getting a good product out the door.', tags: 'Cross-team collaboration / Release coordination' },
-  { number: '02', title: 'New skills are part of the job.', text: 'I’m not afraid to take on work I haven’t done before. To me, being an agentic software engineer means knowing how to use the tools to raise my skill ceiling—and turn seemingly daunting tasks into work I can deliver.', tags: 'Agentic engineering / Learning by building' },
-  { number: '03', title: 'Keep learning. Keep improving.', text: 'I learn by building better ways to work. Within the company, I helped pioneer experiment-driven software releases, set up remote analytics, and establish CI/CD processes—turning new skills into practices the team can build on.', tags: 'Experimentation / Analytics / CI/CD' },
+  { number: '02', title: 'New skills are part of the job.', text: 'I’m not afraid to take on work I haven’t done before. To me, being an agentic software engineer means knowing how to use the tools to raise my skill ceiling and turn seemingly daunting tasks into work I can deliver.', tags: 'Agentic engineering / Learning by building' },
+  { number: '03', title: 'Keep learning. Keep improving.', text: 'I learn by building better ways to work. Within the company, I helped pioneer experiment-driven software releases, set up remote analytics, and establish CI/CD processes, turning new skills into practices the team can build on.', tags: 'Experimentation / Analytics / CI/CD' },
 ]
 
 export const skillGroups = [
