@@ -6,7 +6,7 @@ import './ai-adoption.css'
 const recipients = [
   { x: 105, label: 'Engineers', detail: 'Agentic development', benefit: 'I taught agentic coding, testing, and documentation.', path: 'M272 139 C245 190 105 186 105 262' },
   { x: 300, label: 'Partner teams', detail: 'Shared practices', benefit: 'I helped adapt agentic workflows to their own work.', path: 'M300 148 L300 262' },
-  { x: 495, label: 'Project teams', detail: 'Connected planning', benefit: 'I built MCP tools to read, edit, and add shared project content.', path: 'M328 139 C355 190 495 186 495 262' },
+  { x: 495, label: 'Project teams', detail: 'Connected planning', benefit: 'I connected AI agents to the company’s core project management platform.', path: 'M328 139 C355 190 495 186 495 262' },
 ]
 function nodeColor(progress: number) {
   return `rgb(${Math.round(255 - 179 * progress)}, ${Math.round(255 - 29 * progress)}, ${Math.round(255 - 109 * progress)})`
@@ -79,7 +79,7 @@ export function AIAdoption({ enabled }: { enabled: boolean }) {
         <ol className="ai-story-steps">
           <li><span>01</span><div><h3>Start with the work.</h3><p>I brought tools like Claude Code and Codex into implementation, testing, documentation, and release workflows.</p></div></li>
           <li><span>02</span><div><h3>Bring people along.</h3><p>I mentored engineers in agentic development and helped other teams adapt those workflows to their own work.</p></div></li>
-          <li><span>03</span><div><h3>Build something shared.</h3><p>I created custom MCP tools and server-side integrations for RedmineX, connecting compatible AI tools to project management across teams. Agents can read, edit, and add project content through a shared interface.</p></div></li>
+          <li><span>03</span><div><h3>Connect AI to company-wide work.</h3><p>I built custom MCP tools and server-side integrations that connect AI agents to the primary project management platform used across the entire company. Agents can read, create, and update project content directly in the system teams already rely on.</p></div></li>
         </ol>
         <div className="ai-tool-note"><span className="mini-label">MCP / MODEL CONTEXT PROTOCOL</span><p>The connection between AI agents and the systems our teams already work in.</p></div>
         </div>
