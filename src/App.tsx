@@ -52,9 +52,9 @@ export default function App() {
       <section className="intro section-shell reveal" id="intro" data-slide="Introduction">
         <div className="intro-body">
           <h2>Good software doesn’t<br />stop at <em>the screen.</em></h2>
-          <p>Software Engineering is more than the code you write. I believe that the success of any software product requires vision, discipline, and an attention to detail.</p>
-          <p>As a professional Software Developer, I have embraced the use of agentic tools to enhance the output of lean teams on major products with many moving parts. From full-stack mobile apps, working restaurant portals for real businesses, and internal project management infrastructure, I am not limited by any specific tech stack.</p>
-          <p>If you are looking for an engineer who isn't afraid to tackle new problems and iterate on prototypes quickly, one who takes initiative to identify inefficiencies with internal/stakeholder communication, or just someone who can deliver on time, I am who you are looking for.</p>
+          <p>Software Engineering is more than the code you write. I believe that the success of any software product requires <strong>vision</strong>, <strong>discipline</strong>, and an <strong>attention to detail</strong>.</p>
+          <p>As a professional Software Developer, I have embraced the use of agentic tools to enhance the output of lean teams on major products with many moving parts. From full-stack mobile apps, working restaurant portals for real businesses, and internal project management infrastructure, I am <strong>not limited by any specific tech stack.</strong></p>
+          <p>If you are looking for an engineer who isn't afraid to tackle new problems and iterate on prototypes quickly, one who takes initiative to identify inefficiencies with internal/stakeholder communication, or just someone who can deliver on time, <strong>I am who you are looking for.</strong></p>
         </div>
       </section>
 
