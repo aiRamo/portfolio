@@ -53,7 +53,6 @@ export function PhoneShowcase({ reduced }: { reduced: boolean }) {
 
   return <section className="phone-showcase section-shell" id="mobile-apps" data-slide="Some of my projects" aria-labelledby="phone-showcase-title">
     <div className="phone-showcase-heading">
-      <span className="eyebrow">SELECTED WORK / CONNECTED APPS</span>
       <h2 id="phone-showcase-title">Some of my <em>projects.</em></h2>
       <div className="phone-app-tabs" role="tablist" aria-label="Explore mobile apps" aria-orientation="horizontal">
         {phoneApps.map((item, index) => <button key={item.id} id={`phone-tab-${item.id}`} role="tab" aria-label={item.name} aria-selected={index === selected} aria-controls="phone-app-panel" tabIndex={index === (selected ?? 0) ? 0 : -1} onClick={() => select(index)} onKeyDown={event => keyboard(event, index)}>
