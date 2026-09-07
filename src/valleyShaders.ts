@@ -55,6 +55,27 @@ export function makeSkyMaterial() {
           float veil=band*smoothstep(.34,.72,filaments)*smoothstep(.02,.35,rd.y);
           vec3 dust=mix(vec3(.008,.005,.010),vec3(.006,.010,.018),broad);
           color+=dust*veil*smoothstep(.4,1.,night)*(1.-twilight)*(1.-pow(moonDot,18.)*.75);
+
+          // One Andromeda-inspired inclined galaxy, anchored to the same celestial sphere.
+          // The front-facing cap prevents an antipodal duplicate and bounds the detail work.
+          vec3 galaxyCenter=normalize(vec3(.94531,.31740,.07516));
+          float galaxyFacing=dot(cosmos,galaxyCenter);
+          if(galaxyFacing>.98) {
+            vec3 galaxyRight=normalize(cross(vec3(0.,1.,0.),galaxyCenter));
+            vec3 galaxyUp=cross(galaxyCenter,galaxyRight);
+            vec2 galaxyUV=vec2(dot(cosmos,galaxyRight),dot(cosmos,galaxyUp));
+            galaxyUV=mat2(.82,-.5724,.5724,.82)*galaxyUV;
+            vec2 ellipse=galaxyUV/vec2(.045,.013);
+            float radius=length(ellipse);
+            float halo=exp(-radius*radius*.75);
+            float disk=exp(-radius*2.4);
+            float core=exp(-radius*radius*38.);
+            float dustLane=exp(-pow((ellipse.y-.18)/.12,2.))*exp(-abs(ellipse.x)*1.6);
+            float grain=.9+.1*noise(ellipse*12.);
+            vec3 galaxy=vec3(.013,.017,.025)*halo+vec3(.034,.037,.043)*disk*grain*(1.-dustLane*.35);
+            galaxy+=vec3(.075,.069,.055)*core;
+            color+=galaxy*smoothstep(.4,1.,night)*(1.-twilight)*smoothstep(.02,.25,rd.y);
+          }
         }
 
         // Soft, wind-stretched cloud banks: density and lit edges travel together.
