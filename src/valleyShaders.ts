@@ -119,12 +119,12 @@ export const lakeShader = {
     time: { value: 0 }, night: { value: 0 }, twilight: { value: 0 },
     lightDirection: { value: new THREE.Vector3() }, lightColor: { value: new THREE.Color() }, eye: { value: new THREE.Vector3() },
   },
-  vertexShader: `uniform mat4 textureMatrix; varying vec4 reflectionUV; varying vec3 world;
-    void main(){world=(modelMatrix*vec4(position,1.)).xyz;reflectionUV=textureMatrix*vec4(position,1.);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
+  vertexShader: `uniform mat4 textureMatrix; attribute float lakeDepth; varying float depth; varying vec4 reflectionUV; varying vec3 world;
+    void main(){depth=lakeDepth;world=(modelMatrix*vec4(position,1.)).xyz;reflectionUV=textureMatrix*vec4(position,1.);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
   fragmentShader: `
     uniform sampler2D tDiffuse; uniform float time; uniform float night; uniform float twilight;
     uniform vec3 lightDirection; uniform vec3 lightColor; uniform vec3 eye;
-    varying vec4 reflectionUV; varying vec3 world;
+    varying float depth; varying vec4 reflectionUV; varying vec3 world;
     ${noiseGLSL}
     void main(){
       vec2 p=world.xz;
@@ -132,12 +132,19 @@ export const lakeShader = {
       float waveB=sin(dot(p,vec2(1.25,.45))+time*.8);
       float waveC=sin(dot(p,vec2(-.6,3.9))-time*2.05);
       float breeze=.55+.45*noise(p*.23+vec2(time*.06));
+      float shallows=1.-smoothstep(.05,1.1,depth);
+      breeze*=mix(1.,.3,shallows);
       vec2 ripple=vec2(waveA+waveB*.4,waveB+waveC*.35)*vec2(.0034,.0026)*breeze;
       vec2 uv=reflectionUV.xy/reflectionUV.w;
       vec3 reflection=texture2D(tDiffuse,uv+ripple).rgb;
       vec3 view=normalize(eye-world);
       float fresnel=.34+.58*pow(1.-max(0.,view.y),3.);
+      fresnel*=mix(1.,.56,shallows);
       vec3 deep=mix(vec3(.045,.12,.15),vec3(.008,.025,.033),night);
+      float pebbles=noise(p*4.5)*.65+noise(p*12.)*.35;
+      vec3 gravel=mix(vec3(.13,.19,.155),vec3(.21,.25,.19),pebbles);
+      gravel=mix(gravel,vec3(.016,.031,.030),night);
+      deep=mix(deep,gravel,shallows*.85);
       vec3 result=mix(deep,reflection,fresnel);
       vec3 normal=normalize(vec3((waveA*.045+waveC*.012)*breeze,1.,(waveB*.038+waveC*.014)*breeze));
       float glint=pow(max(0.,dot(reflect(-lightDirection,normal),view)),220.);

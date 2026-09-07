@@ -26,7 +26,7 @@ export default function Valley({ paused, reduced, onProgress, onReady }: { pause
     return () => controller.abort()
   }, [onProgress, onReady])
 
-  return <div className={`valley ${loaded ? 'is-loaded' : ''} ${failed ? 'has-fallback' : ''}`} ref={container} role="img" aria-label="A thawing tundra valley viewed from a granite overlook: distant snow-filled mountain bowls and branching gullies between exposed rock ribs, fractured cliffs, and evergreen pines above a fully melted, rippling lake. Sun and moon cross the sky, stars rotate, and the landscape reflects in the water through sunset and sunrise. Scrolling looks up into the clouds, where occasional distant airliners leave thin contrails by day and show blinking navigation lights at night.">
+  return <div className={`valley ${loaded ? 'is-loaded' : ''} ${failed ? 'has-fallback' : ''}`} ref={container} role="img" aria-label="A thawing tundra valley viewed from a granite overlook: snowy mountain bowls, fractured cliffs, and evergreen pines surround a rippling lake with gently sloping shores. Willow shrubs, ivory and blush flowering bushes, low mauve heather, cattails and smaller tufts of tall grass grow in loose groups along the shoreline. Eight deer gather among juvenile pines on the right bank, while mature pines frame the lake and a small log cabin sits along the far shore. Bird flocks fly right to left above the mountains. A campfire gives off drifting smoke, and warm cabin windows and firelight glow and reflect in the lake at night. Sun and moon cross the sky and stars rotate through sunset and sunrise. Scrolling looks up into clouds, where distant airliners leave thin contrails by day and show blinking navigation lights at night.">
     {failed && <SceneFallback />}
   </div>
 }

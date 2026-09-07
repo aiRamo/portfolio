@@ -17,6 +17,13 @@ import { sceneMetrics } from './sceneMetrics'
 import { CLIFF_MASSES, cliffMassGeometry, talusGeometry } from './cliffs.mjs'
 import { scrollJourney, skyCameraAt } from './scrollJourney.mjs'
 import { createSkyAircraft } from './skyAircraft'
+import { createSkyBirds } from './skyBirds'
+import { lakeGeometry } from './landscape.mjs'
+import { createLakesideCamp, campClearingAt } from './lakesideCamp'
+import { createDeerHerd } from './deer.mjs'
+import { createShorePines, shoreHabitatClearAt } from './shorePines'
+import { createShoreUnderstory } from './shoreUnderstory'
+import { shoreUnderstoryClearAt } from './shoreUnderstoryPlacements.mjs'
 import { createClifftopCats } from './catTree.mjs'
 
 export type SceneSettings = { paused: boolean; reduced: boolean }
@@ -154,13 +161,23 @@ export async function createValleyScene(host: HTMLDivElement, settings: { curren
     const catTree = createClifftopCats((x: number, z: number) => rootedSurface(x, z).height)
     world.add(catTree)
     host.dataset.catTree = 'left-cliff-rim'
-    const tarnGeometry = new THREE.CircleGeometry(1, 128)
-    const tarnPositions = tarnGeometry.attributes.position
-    for (let i = 1; i < tarnPositions.count; i++) {
-      const angle = Math.atan2(tarnPositions.getY(i), tarnPositions.getX(i))
-      const bank = 1.018 + Math.sin(angle * 7) * 0.014 + Math.cos(angle * 11) * 0.009
-      tarnPositions.setXY(i, tarnPositions.getX(i) * TARN.width * bank, tarnPositions.getY(i) * TARN.length * bank)
-    }
+    const camp = await createLakesideCamp((x, z) => sampleTerrain(x, z).height, signal)
+    world.add(camp.group)
+    cleanups.push(() => camp.dispose())
+    signal.throwIfAborted()
+    const deer = createDeerHerd((x: number, z: number) => sampleTerrain(x, z).height)
+    world.add(deer)
+    host.dataset.deerCount = String(deer.children.length)
+    const shorePines = await createShorePines((x, z) => rootedSurface(x, z).height, signal)
+    world.add(shorePines)
+    signal.throwIfAborted()
+    host.dataset.shorePines = '4 mature / 15 juvenile'
+    const shoreUnderstory = await createShoreUnderstory((x, z) => rootedSurface(x, z).height, signal)
+    world.add(shoreUnderstory)
+    signal.throwIfAborted()
+    host.dataset.shoreUnderstory = '12 willows / 4 cattails / 4 flowering bushes / 4 heathers / 8 sedge patches'
+    host.dataset.cabin = 'far-bank'
+    const tarnGeometry = lakeGeometry(sampleTerrain)
     const lake = new Reflector(tarnGeometry, {
       textureWidth: host.clientWidth < 760 ? 512 : 768,
       textureHeight: host.clientWidth < 760 ? 512 : 768,
@@ -196,6 +213,9 @@ export async function createValleyScene(host: HTMLDivElement, settings: { curren
     let planted = 0
     function plant(x: number, z: number, scale: number) {
       if (planted >= capacity) return
+      if (campClearingAt(x, z)) return
+      if (shoreHabitatClearAt(x, z)) return
+      if (shoreUnderstoryClearAt(x, z)) return
       const surface = rootedSurface(x, z)
       if (surface.slope > .95) return
       dummy.position.set(x, surface.height - 0.1, z)
@@ -259,6 +279,9 @@ export async function createValleyScene(host: HTMLDivElement, settings: { curren
       const z = mass.z + Math.sin(angle) * mass.depth * radius
       const surface = sampleTerrain(x, z)
       if (surface.height < .35 || surface.slope > 1.2) continue
+      if (campClearingAt(x, z)) continue
+      if (shoreHabitatClearAt(x, z)) continue
+      if (shoreUnderstoryClearAt(x, z)) continue
       const scale = (.25 + random() ** 2 * 1.1) * (1 - spread * .5)
       dummy.position.set(x, surface.height + scale * .13, z)
       dummy.scale.set(scale * 1.25, scale * .68, scale)
@@ -333,6 +356,7 @@ export async function createValleyScene(host: HTMLDivElement, settings: { curren
     starSphere.add(new THREE.LineSegments(trailGeometry, trailMaterial))
     scene.add(starSphere)
     const aircraft = createSkyAircraft(scene, host)
+    const birds = createSkyBirds(scene, host)
     await checkpoint(94)
     await document.fonts.ready
     await checkpoint(97)
@@ -412,6 +436,9 @@ export async function createValleyScene(host: HTMLDivElement, settings: { curren
       camera.lookAt(look.x + pointer.x * 1.1 * drift, look.y - pointer.y * 0.6 * drift, look.z)
       camera.updateMatrixWorld()
       aircraft.update(dt, pan, frozen && !moving, night, twilight, camera, renderer.getPixelRatio())
+      birds.update(dt, frozen && !moving, camera)
+      camp.update(elapsed, night, camera, host.clientHeight, renderer.getPixelRatio())
+      host.dataset.cabinLights = night > .2 ? 'on' : 'off'
       // Once it is outside the frustum, omit terrain and the lake's reflection pass entirely.
       world.visible = pan < .995
       sky.position.copy(camera.position)

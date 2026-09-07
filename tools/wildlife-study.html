@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Valley wildlife — model study</title>
+  <style>
+    :root{font-family:Inter,system-ui,sans-serif;color:#302e26;background:#c4c0ac;font-synthesis:none}
+    *{box-sizing:border-box}body{margin:0;overflow:hidden}canvas{display:block;touch-action:none}
+    header{position:fixed;top:28px;left:32px;right:32px;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;gap:16px}
+    .eyebrow{font-size:10px;letter-spacing:.22em;font-weight:650;opacity:.62;margin:0 0 8px}h1{font:normal 29px/1.1 Georgia,serif;letter-spacing:-.02em;margin:0}
+    .controls{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end;pointer-events:auto}
+    button,select{appearance:none;font:500 11px/1.2 system-ui;color:inherit;background:#f9f7ecaa;border:1px solid #514d3930;border-radius:6px;padding:10px 13px;cursor:pointer}
+    button:hover,select:hover{background:#fffcef}button[aria-pressed="true"]{background:#3b4437;color:#f1eddf;border-color:#3b4437}
+    button:focus-visible,select:focus-visible{outline:2px solid #596d51;outline-offset:3px}
+    footer{position:fixed;left:32px;right:32px;bottom:25px;display:flex;align-items:flex-end;justify-content:space-between;gap:18px;pointer-events:none}
+    .caption{font-size:11px;line-height:1.7;opacity:.7;max-width:330px}.caption strong{display:block;font-weight:600;opacity:1}
+    footer .controls{justify-content:flex-end}.night{color:#e3e1d0}.night button,.night select{background:#202a36dd;border-color:#bec5c62a}.night button[aria-pressed="true"]{background:#ddd7ba;color:#232b34}
+    #status{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:12px;pointer-events:none}
+    @media(max-width:650px){header{top:18px;left:18px;right:18px;display:block}h1{font-size:24px}header .controls{justify-content:flex-start;margin-top:18px}footer{left:18px;right:18px;bottom:18px;display:block}footer .controls{justify-content:flex-start;margin-top:14px}button,select{padding:9px 10px}}
+  </style>
+</head>
+<body>
+  <header><div><p class="eyebrow">ALPINE VALLEY / MODEL STUDY</p><h1 id="title">Forest residents</h1></div><div class="controls">
+    <select id="model" aria-label="Model"><option value="deer">Deer herd</option><option value="buck">Antlered buck</option><option value="doe">Antlerless doe</option><option value="bird">Bird in flight</option><option value="cabin">Lakeside cabin</option><option value="camp">Cabin &amp; campfire</option><option value="pines">Shore pines</option><option value="understory">Shrubs &amp; grasses</option><option value="variants">Shrub variants</option></select>
+    <button id="day" aria-pressed="true">Day</button><button id="night" aria-pressed="false">Night</button><button id="motion" aria-pressed="true">Motion on</button>
+  </div></header>
+  <div id="status">Preparing model…</div>
+  <footer><div class="caption"><strong id="description">Drag to orbit · Scroll to inspect</strong>Closed geometry, natural materials, and light from every direction.</div><div class="controls" id="views">
+    <button data-view="three">Perspective</button><button data-view="front">Front</button><button data-view="rear">Rear</button><button data-view="side">Side</button><button data-view="top">Above</button>
+  </div></footer>
+  <script type="module">
+    import * as THREE from 'three'
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
+    import { createBirdBody, createBirdWing } from '../src/skyBirds.ts'
+    import { createLakesideCamp } from '../src/lakesideCamp.ts'
+
+    const renderer=new THREE.WebGLRenderer({antialias:true})
+    renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true
+    renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping
+    document.body.append(renderer.domElement)
+    const scene=new THREE.Scene(), camera=new THREE.PerspectiveCamera(38,1,.025,1000)
+    const controls=new OrbitControls(camera,renderer.domElement)
+    controls.enableDamping=true;controls.dampingFactor=.075;controls.maxPolarAngle=Math.PI*.94
+    const ambient=new THREE.HemisphereLight('#e7eef4','#756744',2.1)
+    const sun=new THREE.DirectionalLight('#ffdfb2',3.2),rim=new THREE.DirectionalLight('#c9e2ea',1.0)
+    sun.position.set(-8,12,8);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048)
+    sun.shadow.normalBias=.012;rim.position.set(8,7,-10);scene.add(ambient,sun,rim,sun.target)
+    const floorMaterial=new THREE.MeshStandardMaterial({color:'#c4c0ac',roughness:1})
+    const floor=new THREE.Mesh(new THREE.PlaneGeometry(2000,2000),floorMaterial)
+    floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor)
+    let subject, camp=null, loadingController, wingPivots=[], animation=true, night=false, radius=3, modelKind='deer', elapsed=0, previous=0, loadSerial=0
+    const target=new THREE.Vector3(), originalEmissive=[]
+    const status=document.querySelector('#status'), select=document.querySelector('#model')
+    const titles={deer:'Forest residents',buck:'The antlered buck',doe:'The woodland doe',bird:'A passing songbird',cabin:'The lakeside cabin',camp:'Cabin & campfire',pines:'Along the shoreline',understory:'The smaller details',variants:'Shoreline plant variants'}
+    const descriptions={deer:'Eight deer · Adults and young · Varied silhouettes',buck:'Branching antlers · Faceted coat · Articulated anatomy',doe:'Antlerless adult · Soft coat · Delicate proportions',bird:'Independent wing articulation · Feathered silhouette',cabin:'Stacked logs · Stone hearth · Warm evening windows',camp:'Moving firelight · Drifting smoke · Warm evening windows',pines:'Mature and juvenile pines · Irregular boughs · Faceted evergreen foliage',understory:'Willow · Cattail · Wild rose · Heather · Sedge',variants:'Brown cattail heads · Ivory and blush flowers · Low mauve heather'}
+
+    function setLight(value){
+      night=value;document.body.classList.toggle('night',night)
+      scene.background=new THREE.Color(night?'#111d2c':'#c4c0ac')
+      floorMaterial.color.set(night?'#263647':'#c4c0ac')
+      ambient.intensity=night?.42:2.1;sun.intensity=night?.6:3.2;rim.intensity=night?.55:1
+      sun.color.set(night?'#aecff0':'#ffdfb2')
+      if(!camp)originalEmissive.forEach(({material,intensity})=>material.emissiveIntensity=intensity*(night?1:.16))
+      document.querySelector('#day').setAttribute('aria-pressed',String(!night))
+      document.querySelector('#night').setAttribute('aria-pressed',String(night))
+    }
+    function view(name){
+      const bird=modelKind==='bird'
+      const direction={three:new THREE.Vector3(-1.15,.65,1.55),front:new THREE.Vector3(bird?-1:0,.10,bird?0:1),rear:new THREE.Vector3(bird?1:0,.10,bird?0:-1),side:new THREE.Vector3(bird?0:1,.13,bird?1:0),top:new THREE.Vector3(.001,1,.001)}[name]
+      camera.position.copy(target).addScaledVector(direction.normalize(),radius/Math.tan(THREE.MathUtils.degToRad(camera.fov/2))*1.22/Math.min(1,camera.aspect))
+      controls.target.copy(target);controls.minDistance=radius*.5;controls.maxDistance=radius*15;controls.update()
+    }
+    function disposeGroup(group){
+      const materials=new Set(),geometries=new Set()
+      group.traverse(o=>{if(o.isMesh||o.isPoints||o.isLine){geometries.add(o.geometry);(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>materials.add(m));if(o.isInstancedMesh)o.dispose()}})
+      geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose())
+    }
+    function attach(group,nextCamp=null){
+      if(subject){scene.remove(subject);camp?.dispose();disposeGroup(subject)}
+      camp=nextCamp
+      subject=group;scene.add(subject);subject.updateMatrixWorld(true)
+      originalEmissive.length=0
+      subject.traverse(o=>{if(o.isMesh){if(!camp){o.castShadow=true;o.receiveShadow=true}for(const material of Array.isArray(o.material)?o.material:[o.material])if(material.emissive&&material.emissive.getHex()>0&&!originalEmissive.some(item=>item.material===material))originalEmissive.push({material,intensity:material.emissiveIntensity})}})
+      const bounds=new THREE.Box3().setFromObject(subject),size=bounds.getSize(new THREE.Vector3())
+      bounds.getCenter(target);radius=Math.max(size.x,size.y,size.z)*.62
+      floor.position.y=modelKind==='bird'||modelKind==='camp'?0:bounds.min.y-.018;sun.target.position.copy(target)
+      sun.position.copy(target).add(new THREE.Vector3(-radius*1.4,radius*2,radius*1.6))
+      Object.assign(sun.shadow.camera,{left:-radius*1.5,right:radius*1.5,top:radius*1.5,bottom:-radius*1.5,near:.1,far:radius*12})
+      sun.shadow.camera.updateProjectionMatrix();setLight(night);view('three');status.hidden=true
+      document.body.dataset.ready=modelKind
+    }
+    async function choose(kind){
+      loadingController?.abort();loadingController=new AbortController()
+      const serial=++loadSerial;modelKind=kind;wingPivots=[];status.hidden=false;status.textContent='Preparing model…'
+      document.querySelector('#title').textContent=titles[kind];document.querySelector('#description').textContent=descriptions[kind]
+      try{
+        let group,nextCamp=null
+        if(kind==='bird'){
+          group=new THREE.Group()
+          const material=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.98,flatShading:true})
+          const body=new THREE.Mesh(createBirdBody(),material);group.add(body)
+          const wingGeometry=createBirdWing()
+          for(let side=0;side<2;side++){const pivot=new THREE.Group();pivot.position.set(-.04,.035,0);pivot.rotation.x=side?Math.PI:0;pivot.add(new THREE.Mesh(wingGeometry,material));group.add(pivot);wingPivots.push(pivot)}
+          group.position.y=1.8
+        }else if(kind==='camp'){
+          nextCamp=await createLakesideCamp(()=>0,loadingController.signal)
+          nextCamp.update(elapsed,night?1:0,camera,innerHeight,renderer.getPixelRatio())
+          group=nextCamp.group
+        }else if(kind==='pines'){
+          group=new THREE.Group()
+          const assets=await Promise.all(['mature','juvenile'].map(kind=>new GLTFLoader().loadAsync(`/models/shore-pine-${kind}.glb`)))
+          group.add(assets[0].scene);assets[1].scene.position.x=4;group.add(assets[1].scene)
+        }else if(kind==='understory'||kind==='variants'){
+          group=new THREE.Group()
+          const models=kind==='variants'?['cattail','flower','heather']:['shrub','cattail','flower','heather','grass']
+          const assets=await Promise.all(models.map(kind=>new GLTFLoader().loadAsync(`/models/shore-${kind}.glb`)))
+          assets.forEach((asset,index)=>{asset.scene.position.x=index*2;group.add(asset.scene)})
+        }else if(kind==='cabin'){
+          group=(await new GLTFLoader().loadAsync('/models/lakeside-cabin.glb')).scene
+        }else{
+          const deer=await import('../src/deer.mjs')
+          group=kind==='deer'?deer.createDeerHerd(()=>0,{placements:deer.DEER_PLACEMENTS.map(item=>({...item,x:item.x-10.5,z:item.z+34}))}):deer.createDeer({antlers:kind==='buck'})
+          if(group.group)group=group.group
+        }
+        if(serial!==loadSerial){nextCamp?.dispose();disposeGroup(group);return}
+        attach(group,nextCamp)
+      }catch(error){if(error.name==='AbortError')return;status.textContent=`Model could not load: ${error.message}`;console.error(error)}
+    }
+    document.querySelector('#day').onclick=()=>setLight(false)
+    document.querySelector('#night').onclick=()=>setLight(true)
+    document.querySelector('#motion').onclick=event=>{animation=!animation;event.target.textContent=animation?'Motion on':'Motion off';event.target.setAttribute('aria-pressed',String(animation))}
+    document.querySelector('#views').onclick=event=>{if(event.target.dataset.view)view(event.target.dataset.view)}
+    select.onchange=()=>choose(select.value)
+    function resize(){renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix()}
+    addEventListener('resize',resize);resize()
+    const initial=new URLSearchParams(location.search).get('model')
+    if(initial&&titles[initial])select.value=initial
+    if(new URLSearchParams(location.search).has('night'))setLight(true)
+    choose(select.value)
+    renderer.setAnimationLoop(now=>{
+      const dt=previous?Math.min(.05,(now-previous)/1000):0;previous=now;if(animation)elapsed+=dt
+      const flap=Math.sin(elapsed*6.4)*.76-.12
+      wingPivots.forEach((pivot,side)=>pivot.rotation.x=side?Math.PI-flap:flap)
+      camp?.update(elapsed,night?1:0,camera,innerHeight,renderer.getPixelRatio())
+      controls.update();renderer.render(scene,camera)
+    })
+  </script>
+</body>
+</html>

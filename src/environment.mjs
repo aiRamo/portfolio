@@ -71,6 +71,19 @@ export const TARN = { x: 0, z: 13, width: 24, length: 37 }
 export function lakeCenter(_z) { return TARN.x }
 export function lakeWidth(z) { return TARN.width * Math.sqrt(Math.max(0, 1 - ((z - TARN.z) / TARN.length) ** 2)) }
 
+/** Broad coves and small gravel spits share one outline with the submerged bank. */
+export function lakeRadiusAt(angle) {
+  return 1 + .027 * Math.sin(angle * 3 + .6) + .018 * Math.cos(angle * 5 - .9) + .008 * Math.sin(angle * 9 + .4)
+}
+
+/** Signed distance in world metres, negative beneath the water; no angular seam. */
+export function shorelineDistanceAt(x, z) {
+  const px = (x - TARN.x) / TARN.width, pz = (z - TARN.z) / TARN.length
+  const angle = Math.atan2(pz, px)
+  const radialMetres = Math.hypot(Math.cos(angle) * TARN.width, Math.sin(angle) * TARN.length)
+  return (Math.hypot(px, pz) - lakeRadiusAt(angle)) * radialMetres
+}
+
 export function mountainHeight(x, z) {
   return alpineHeightAt(x, z)
 }
@@ -125,9 +138,13 @@ export function terrainHeight(x, z) {
     h += cliff * (broad - Math.min(clefts, h * .09) + (shelf - h) * .45)
     h += cliff * (noise(x * .45, z * .38) - .5) * .13
   }
-  const basin = Math.hypot((x - TARN.x) / TARN.width, (z - TARN.z) / TARN.length)
-  h = mix(-1.6, h, smooth((basin - 0.87) / 0.28))
   h += smooth((z - 45) / 17) * (7 + noise(x * 0.05, z * 0.05) * 2)
+  const shoreDistance = shorelineDistanceAt(x, z)
+  // A continuous 1:5 gravel slope crosses the water, with an eight-metre shallow
+  // apron. Only beyond the dry beach does it blend back into the original hills.
+  // Keeping the waterline independent of hill height prevents a steep raised rim.
+  const bank = 1.6 * Math.tanh(shoreDistance / 8)
+  h = mix(bank, h, smooth((shoreDistance - 4) / 8))
   return h
 }
 
