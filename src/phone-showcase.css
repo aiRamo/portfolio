@@ -43,18 +43,22 @@
     .phone-app-tabs img { width: 24px; height: 24px; }
   }
   @media (max-width: 760px) {
-    .phone-showcase[data-slide] { height: calc(100svh - 166px); grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); grid-template-areas: 'heading heading' 'details phone'; gap: 24px 10px; }
+    .phone-showcase[data-slide] { height: auto; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto auto; grid-template-areas: 'heading' 'phone' 'details'; gap: 18px; }
     .phone-showcase-heading { padding-top: 0; }
     .phone-showcase-heading > .eyebrow { font-size: 8px; margin-bottom: 8px; }
     .phone-showcase h2 { font-size: clamp(26px, 6.7vw, 36px); }
     .phone-app-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 16px; gap: 2px; border-radius: 13px; }
     .phone-app-tabs button { min-width: 0; padding: 5px 4px; gap: 6px; font-size: 10px; }
     .phone-app-tabs img { width: 24px; height: 24px; border-radius: 6px; }
-    .phone-app-detail { align-self: center; padding-bottom: 24px; }
+    .phone-showcase-visual { width: 100%; max-width: 400px; aspect-ratio: 3 / 5; justify-self: center; }
+    .phone-app-detail { align-self: start; padding-bottom: 0; }
     .phone-app-detail .mini-label { font-size: 8px; letter-spacing: .08em; }
     .phone-app-detail h3 { font-size: clamp(18px, 4.6vw, 23px); margin-top: 7px; }
-    .phone-app-description, .phone-capability-full { display: none; }
-    .phone-capability-compact { display: block; font-size: 12px; line-height: 1.5; }
+    .phone-app-description { display: block; font-size: 15px; line-height: 1.6; }
+    .phone-capability-full { display: block; }
+    .phone-capability-full strong { font-size: 15px; }
+    .phone-capability-full > span { font-size: 14px; line-height: 1.6; }
+    .phone-capability-compact { display: none; }
     .phone-capabilities { gap: 14px; margin-top: 20px; }
     .phone-capabilities li { gap: 7px; }
     .phone-app-detail a { font-size: 10px; gap: 5px; margin-top: 12px; }
@@ -86,7 +90,7 @@
     .phone-app-detail { padding-bottom: 12px; }
     .phone-app-detail a { margin-top: 5px; }
   }
-  @media (max-height: 620px) and (min-aspect-ratio: 6/5) {
+  @media (max-height: 620px) and (min-aspect-ratio: 6/5) and (min-width: 761px) {
     .phone-showcase[data-slide] { grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); grid-template-areas: 'heading phone' 'details phone'; gap: 8px 18px; }
     .phone-showcase-heading { display: flex; align-items: center; gap: 12px; padding-top: 0; }
     .phone-showcase-heading > .eyebrow { display: none; }
