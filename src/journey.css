@@ -21,9 +21,10 @@
 
   .sky-content { position: relative; padding-bottom: 24px; }
   .sky-content .reveal { opacity: var(--pull-opacity, 1); transform: none; translate: 0 var(--pull-y, 0px); transition: none; }
-  .intro { min-height: 65svh; align-content: start; padding-block: 80px 120px; }
+  .intro { display: block; min-height: 65svh; padding-block: 80px 120px; }
+  .intro-body { max-width: 780px; margin-inline: auto; }
+  .intro p { max-width: none; }
   .intro h2 { font-size: clamp(42px, 4.2vw, 65px); }
-  .intro-aside { opacity: .8; }
   .project-art, .about-card { box-shadow: 0 28px 70px #071b3520, 0 2px 0 rgb(var(--hero-ink) / .4); }
   .about-card, .project-details { background: linear-gradient(0deg, rgb(var(--panel) / .78), rgb(var(--panel) / .43)); backdrop-filter: blur(14px); border-color: rgb(var(--ink) / .18); }
   .marquee { background: rgb(var(--panel) / .14); }

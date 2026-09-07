@@ -1,5 +1,6 @@
 import { sectionScrollAt, sectionScrollDuration, smoothScrollStep, wheelDeltaPixels, wheelTargetAt } from './scrollMotion.mjs'
 import type { PresentationState } from './presentation'
+import { layoutTop, readingOffset } from './scrollLayout'
 
 /** Smooth wheel/keyboard scrolling, with native touch momentum and eased section links. */
 export function attachFreeScroll(reduced: boolean, resume: boolean) {
@@ -9,12 +10,7 @@ export function attachFreeScroll(reduced: boolean, resume: boolean) {
   let initialized = false, active = -1, frame = 0, observation = 0
   let smoothFrame = 0, smoothTarget = scrollY
   const ready = () => content.dataset.reveal === 'content'
-  const offset = () => parseFloat(getComputedStyle(root).scrollPaddingTop) || 100
-  const layoutTop = (element: HTMLElement) => {
-    let top = 0
-    for (let node: HTMLElement | null = element; node; node = node.offsetParent as HTMLElement | null) top += node.offsetTop
-    return top
-  }
+  const offset = readingOffset
   const targetTop = (element: HTMLElement) => Math.max(0, Math.min(root.scrollHeight - innerHeight, layoutTop(element) - offset()))
   const targetFor = (hash: string) => {
     try {

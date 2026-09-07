@@ -49,7 +49,14 @@ export default function App() {
 
       <div className="sky-content">
 
-      <section className="intro section-shell reveal" id="intro" data-slide="Introduction"><div className="section-kicker"><span className="tiny-cross">+</span> A FEW WORDS BEFORE THE TRAIL</div><div className="intro-body"><h2>Good software doesn’t<br />stop at <em>the screen.</em></h2><p>It’s a sensor in the field. A coach catching the next pitch. A team getting a day back. I build the apps, connections, and systems that make those moments work.</p></div><div className="intro-aside"><span>FROM THE FIRST IDEA</span><ArrowDown size={27} strokeWidth={1} /><span>TO THE REAL WORLD</span></div></section>
+      <section className="intro section-shell reveal" id="intro" data-slide="Introduction">
+        <div className="intro-body">
+          <h2>Good software doesn’t<br />stop at <em>the screen.</em></h2>
+          <p>Software Engineering is more than the code you write. I believe that the success of any software product requires vision, discipline, and an attention to detail.</p>
+          <p>As a professional Software Developer, I have embraced the use of agentic tools to enhance the output of lean teams on major products with many moving parts. From full-stack mobile apps, working restaurant portals for real businesses, and internal project management infrastructure, I am not limited by any specific tech stack.</p>
+          <p>If you are looking for an engineer who isn't afraid to tackle new problems and iterate on prototypes quickly, one who takes initiative to identify inefficiencies with internal/stakeholder communication, or just someone who can deliver on time, I am who you are looking for.</p>
+        </div>
+      </section>
 
       <div id="work" data-section>
         <PhoneShowcase reduced={reduced} />

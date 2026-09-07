@@ -1,19 +1,24 @@
 import { useEffect, type RefObject } from 'react'
 import { contentPullAt, journeyAt, scrollJourney } from './scrollJourney.mjs'
 import { attachPresentation } from './presentation'
+import { layoutTop, readingOffset } from './scrollLayout'
 
 export function useScrollJourney(reduced: boolean, progress: RefObject<HTMLDivElement | null>, setActive: (section: string) => void) {
   useEffect(() => {
     const root = document.documentElement
-    const hero = document.querySelector<HTMLElement>('.hero')!
-    const stage = document.querySelector<HTMLElement>('.hero-stage')!
+    const intro = document.querySelector<HTMLElement>('#intro')!
     const sections = [...document.querySelectorAll<HTMLElement>('[data-section]')]
     const pulls = [...document.querySelectorAll<HTMLElement>('.reveal')].map(element => ({ element, y: 0 }))
     let frame = 0
+    let layoutDirty = true, flightDistance = 1
     const update = () => {
       frame = 0
-      const viewHeight = stage.offsetHeight
-      const flight = journeyAt(scrollY, hero.offsetHeight - viewHeight)
+      if (layoutDirty) {
+        // Finish the camera tilt at the same reading anchor used by navigation.
+        flightDistance = Math.max(1, Math.round(layoutTop(intro) - readingOffset()))
+        layoutDirty = false
+      }
+      const flight = journeyAt(scrollY, flightDistance)
       scrollJourney.progress = flight.progress
       const scrollable = root.scrollHeight - innerHeight
       let active = 'home'
@@ -36,17 +41,18 @@ export function useScrollJourney(reduced: boolean, progress: RefObject<HTMLDivEl
       })
     }
     const schedule = () => { if (!frame) frame = requestAnimationFrame(update) }
-    const resize = new ResizeObserver(schedule)
+    const measure = () => { layoutDirty = true; schedule() }
+    const resize = new ResizeObserver(measure)
     resize.observe(document.querySelector('main')!)
     addEventListener('scroll', schedule, { passive: true })
-    addEventListener('resize', schedule)
+    addEventListener('resize', measure)
     addEventListener('focusin', schedule)
     const detachPresentation = attachPresentation(reduced)
     update()
     return () => {
       cancelAnimationFrame(frame); resize.disconnect()
       detachPresentation()
-      removeEventListener('scroll', schedule); removeEventListener('resize', schedule); removeEventListener('focusin', schedule)
+      removeEventListener('scroll', schedule); removeEventListener('resize', measure); removeEventListener('focusin', schedule)
       pulls.forEach(({ element }) => { element.style.removeProperty('--pull-y'); element.style.removeProperty('--pull-opacity') })
     }
   }, [reduced, progress, setActive])

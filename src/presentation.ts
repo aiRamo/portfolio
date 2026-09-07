@@ -1,6 +1,7 @@
 import { sectionScrollAt, sectionScrollDuration, smoothScrollStep, createScrollSmoother, wheelDeltaPixels, wheelTargetAt } from './scrollMotion.mjs'
 import { isSceneScroll, nearestStop, panelRange, containedScrollAt, swipeDirection, wheelGesture } from './presentationStops.mjs'
 import { attachFreeScroll } from './freeScroll'
+import { layoutTop, readingOffset } from './scrollLayout'
 
 type Stop = { top: number; end: number; element: HTMLElement }
 export type PresentationState = { index: number; count: number; id: string; label: string; moving: boolean }
@@ -47,16 +48,11 @@ function attachDesktopPresentation(reduced: boolean, resume: boolean) {
   let readingFrame = 0, readingTarget = scrollY
   const gesture = wheelGesture()
   const ready = () => content.dataset.reveal === 'content'
-  const offset = () => parseFloat(getComputedStyle(root).scrollPaddingTop) || 110
+  const offset = readingOffset
   const sceneEnd = () => stops[1]?.top ?? 0
   const showScene = () => {
     isolate(panels[0], false, stops[1]?.element)
     crop()
-  }
-  const layoutTop = (element: HTMLElement) => {
-    let top = 0
-    for (let node: HTMLElement | null = element; node; node = node.offsetParent as HTMLElement | null) top += node.offsetTop
-    return top
   }
   const measure = () => {
     const available = Math.max(180, innerHeight - offset() - 66)
