@@ -73,7 +73,7 @@ export function AIAdoption({ enabled }: { enabled: boolean }) {
   return <section className="ai-adoption section-shell" id="ai-adoption" data-slide="AI adoption" aria-labelledby="ai-adoption-title">
     <div className="ai-layout">
       <div className="ai-copy">
-        <div className="ai-heading reveal"><span className="eyebrow">BEYOND THE CODE / AI ENABLEMENT</span><h2 id="ai-adoption-title">Good ideas travel.<br /><em>I help them take hold.</em></h2></div>
+        <div className="ai-heading reveal"><span className="eyebrow">BEYOND THE CODE / AI ENABLEMENT</span><h2 id="ai-adoption-title">Your next agentic engineer.<br /><em>Your team’s next advantage.</em></h2></div>
         <div className="ai-story reveal">
         <p className="ai-lead">I helped pioneer AI-assisted engineering at Stalker Radar—and made it a practice other teams could use.</p>
         <ol className="ai-story-steps">
