@@ -20,6 +20,7 @@
   .light-wash { background: radial-gradient(ellipse at var(--light-x) var(--light-y), #ffd19755, transparent 75%); }
 
   .sky-content { position: relative; padding-bottom: 24px; }
+  :root[data-mountain-return] .sky-pause { visibility: hidden; }
   .sky-content .reveal { opacity: var(--pull-opacity, 1); transform: none; translate: 0 var(--pull-y, 0px); transition: none; }
   .intro { display: block; min-height: 65svh; padding-block: 80px 120px; }
   .intro-body { max-width: 780px; margin-inline: auto; }

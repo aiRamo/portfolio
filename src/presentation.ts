@@ -2,6 +2,7 @@ import { sectionScrollAt, sectionScrollDuration, smoothScrollStep, createScrollS
 import { isSceneScroll, nearestStop, panelRange, containedScrollAt, swipeDirection, wheelGesture } from './presentationStops.mjs'
 import { attachFreeScroll } from './freeScroll'
 import { layoutTop, readingOffset } from './scrollLayout'
+import { returnToMountains } from './returnToMountains'
 
 type Stop = { top: number; end: number; element: HTMLElement }
 export type PresentationState = { index: number; count: number; id: string; label: string; moving: boolean }
@@ -46,6 +47,7 @@ function attachDesktopPresentation(reduced: boolean, resume: boolean) {
   let resizeFrame = 0, resizePending = false, alignmentFrame = 0
   let panFrame = 0, panPosition = scrollY, panTarget = scrollY, panPrevious = 0
   let readingFrame = 0, readingTarget = scrollY
+  let cancelReturn: (() => void) | undefined
   const gesture = wheelGesture()
   const ready = () => content.dataset.reveal === 'content'
   const offset = readingOffset
@@ -162,6 +164,7 @@ function attachDesktopPresentation(reduced: boolean, resume: boolean) {
     panFrame = requestAnimationFrame(tick)
   }
   const go = (next: number, focus = false, atEnd = false) => {
+    if (root.dataset.mountainReturn) return
     if (!initialized || !ready() || !stops.length) return
     if (next < 0 || next >= stops.length) return
     const destination = atEnd ? stops[next].end : stops[next].top
@@ -171,6 +174,15 @@ function attachDesktopPresentation(reduced: boolean, resume: boolean) {
     stopPan()
     cancelAnimationFrame(alignmentFrame); alignmentFrame = 0
     index = next; moving = true
+    if (next === 0 && !atEnd) {
+      publish(true)
+      cancelReturn = returnToMountains(reduced, () => {
+        window.scrollTo({ top: 0, behavior: 'instant' })
+        panPosition = panTarget = readingTarget = 0
+        showScene()
+      }, () => { cancelReturn = undefined; finish(focus, 0) })
+      return
+    }
     // Let the document move through the reading frame, including intervening
     // slides on menu jumps. Only the settled slide becomes interactive.
     isolate(null, true)
@@ -357,6 +369,7 @@ function attachDesktopPresentation(reduced: boolean, resume: boolean) {
   document.addEventListener('click', click)
   initialize()
   return () => {
+    cancelReturn?.()
     cancelAnimationFrame(frame); cancelAnimationFrame(panFrame); cancelAnimationFrame(readingFrame); cancelAnimationFrame(resizeFrame); cancelAnimationFrame(alignmentFrame); observer.disconnect(); resize.disconnect()
     removeEventListener('wheel', wheel); removeEventListener('touchstart', touchStart); removeEventListener('touchmove', touchMove)
     removeEventListener('touchend', touchEnd); removeEventListener('touchcancel', touchCancel); removeEventListener('keydown', key)

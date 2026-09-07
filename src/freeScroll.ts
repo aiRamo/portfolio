@@ -1,6 +1,7 @@
 import { sectionScrollAt, sectionScrollDuration, smoothScrollStep, wheelDeltaPixels, wheelTargetAt } from './scrollMotion.mjs'
 import type { PresentationState } from './presentation'
 import { layoutTop, readingOffset } from './scrollLayout'
+import { returnToMountains } from './returnToMountains'
 
 /** Smooth wheel/keyboard scrolling, with native touch momentum and eased section links. */
 export function attachFreeScroll(reduced: boolean, resume: boolean) {
@@ -9,6 +10,7 @@ export function attachFreeScroll(reduced: boolean, resume: boolean) {
   const panels = [...document.querySelectorAll<HTMLElement>('[data-slide]')]
   let initialized = false, active = -1, frame = 0, observation = 0
   let smoothFrame = 0, smoothTarget = scrollY
+  let cancelReturn: (() => void) | undefined
   const ready = () => content.dataset.reveal === 'content'
   const offset = readingOffset
   const targetTop = (element: HTMLElement) => Math.max(0, Math.min(root.scrollHeight - innerHeight, layoutTop(element) - offset()))
@@ -69,8 +71,16 @@ export function attachFreeScroll(reduced: boolean, resume: boolean) {
     target.focus({ preventScroll: true })
   }
   const go = (panel: HTMLElement) => {
+    if (root.dataset.mountainReturn) return
     if (!initialized || !ready()) return
     cancel()
+    if (panel.id === 'home') {
+      cancelReturn = returnToMountains(reduced, () => {
+        window.scrollTo({ top: 0, behavior: 'instant' })
+        smoothTarget = 0
+      }, () => { cancelReturn = undefined; update(); focus(panel) })
+      return
+    }
     const start = scrollY, end = targetTop(panel), began = performance.now()
     const duration = sectionScrollDuration(end - start, reduced)
     const tick = (now: number) => {
@@ -133,6 +143,7 @@ export function attachFreeScroll(reduced: boolean, resume: boolean) {
   document.addEventListener('click', click)
   initialize()
   return () => {
+    cancelReturn?.()
     cancel(); cancelAnimationFrame(observation); observer.disconnect(); resize.disconnect()
     removeEventListener('scroll', schedule); removeEventListener('resize', schedule)
     removeEventListener('wheel', wheel); removeEventListener('touchstart', cancel); removeEventListener('keydown', key)

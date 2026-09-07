@@ -3,6 +3,7 @@
   html:has(.portfolio-content[inert]), html:has(.portfolio-content[inert]) body { overflow: hidden; }
   .portfolio-content { opacity: 0; transition: opacity 1100ms cubic-bezier(.33, 0, .2, 1); }
   .portfolio-content[data-reveal='content'] { opacity: 1; }
+  :root[data-mountain-return] .portfolio-content { opacity: var(--return-opacity, 1); transition: none; pointer-events: none; }
   .scene-loader {
     --loader-bg: #edf1eb;
     --loader-ink: #273c41;

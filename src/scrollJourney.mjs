@@ -1,6 +1,6 @@
 import { clamp, mix, smooth, observerCamera } from './environment.mjs'
 
-export const scrollJourney = { progress: 0 }
+export const scrollJourney = { progress: 0, override: /** @type {number | null} */ (null) }
 
 /** Native scroll supplies the timeline. Reversing scroll retraces exactly the same camera path. */
 export function journeyAt(scroll, distance) {

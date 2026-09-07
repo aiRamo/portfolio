@@ -18,7 +18,7 @@ export function useScrollJourney(reduced: boolean, progress: RefObject<HTMLDivEl
         flightDistance = Math.max(1, Math.round(layoutTop(intro) - readingOffset()))
         layoutDirty = false
       }
-      const flight = journeyAt(scrollY, flightDistance)
+      const flight = scrollJourney.override === null ? journeyAt(scrollY, flightDistance) : journeyAt(scrollJourney.override, 1)
       scrollJourney.progress = flight.progress
       const scrollable = root.scrollHeight - innerHeight
       let active = 'home'
@@ -41,17 +41,20 @@ export function useScrollJourney(reduced: boolean, progress: RefObject<HTMLDivEl
       })
     }
     const schedule = () => { if (!frame) frame = requestAnimationFrame(update) }
+    const updateCamera = () => { cancelAnimationFrame(frame); update() }
     const measure = () => { layoutDirty = true; schedule() }
     const resize = new ResizeObserver(measure)
     resize.observe(document.querySelector('main')!)
     addEventListener('scroll', schedule, { passive: true })
     addEventListener('resize', measure)
     addEventListener('focusin', schedule)
+    addEventListener('journeychange', updateCamera)
     const detachPresentation = attachPresentation(reduced)
     update()
     return () => {
       cancelAnimationFrame(frame); resize.disconnect()
       detachPresentation()
+      removeEventListener('journeychange', updateCamera)
       removeEventListener('scroll', schedule); removeEventListener('resize', measure); removeEventListener('focusin', schedule)
       pulls.forEach(({ element }) => { element.style.removeProperty('--pull-y'); element.style.removeProperty('--pull-opacity') })
     }
