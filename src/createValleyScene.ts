@@ -5,12 +5,15 @@ import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js'
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js'
 import { Reflector } from 'three/addons/objects/Reflector.js'
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
-import { atmosphere, celestialAt, skyRotationAt, cloudTimeAt, distanceHazeAt, lightingAt, rockCoverageAt, snowCoverageAt, TARN, seededRandom, noise, mix, smooth } from './environment.mjs'
+import { atmosphere, celestialAt, skyRotationAt, cloudTimeAt, distanceHazeAt, lightingAt, rockCoverageAt, TARN, seededRandom, noise, mix, smooth } from './environment.mjs'
 import { makeSkyMaterial, lakeShader, landscapeFinish } from './valleyShaders'
 import { graniteMaterial } from './granite'
 import { pineMaterial } from './tundra'
-import { createTerrainSampler, distantPineGeometry, forestDensityAt, scatterDistantForest } from './forest.mjs'
-import { landscapeGeometry } from './landscape.mjs'
+import { createTerrainSampler, distantPineGeometry } from './forest.mjs'
+import { loadTerrain } from './loadTerrain'
+import { prepareAlpineSnow } from './alpineSnow'
+import { createFramePacer } from './frameSchedule.mjs'
+import { sceneMetrics } from './sceneMetrics'
 import { CLIFF_MASSES, cliffMassGeometry, talusGeometry } from './cliffs.mjs'
 import { scrollJourney, skyCameraAt } from './scrollJourney.mjs'
 import { createSkyAircraft } from './skyAircraft'
@@ -41,7 +44,7 @@ export async function createValleyScene(host: HTMLDivElement, settings: { curren
     cleanups.push(() => { renderer.dispose(); renderer.domElement.remove() })
     renderer.setPixelRatio(Math.min(devicePixelRatio, host.clientWidth < 760 ? 1.3 : 1.6))
     renderer.shadowMap.enabled = true
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap
+    renderer.shadowMap.type = THREE.PCFShadowMap
     renderer.shadowMap.autoUpdate = false
     renderer.toneMapping = THREE.ACESFilmicToneMapping
     renderer.toneMappingExposure = 1
@@ -102,40 +105,11 @@ export async function createValleyScene(host: HTMLDivElement, settings: { curren
     scene.add(moonLight, moonLight.target)
     await checkpoint(16)
 
-    // A continuous landscape extends beyond every edge of the camera's view.
-    const landGeometry = landscapeGeometry()
-    const landPositions = landGeometry.attributes.position
-    const colors = new Float32Array(landPositions.count * 3)
-    const rockCoverage = new Float32Array(landPositions.count)
-    const snowCoverage = new Float32Array(landPositions.count)
-    const grass = new THREE.Color('#77735b'), heather = new THREE.Color('#786466'), rock = new THREE.Color('#92999b')
-    const distantBlue = new THREE.Color('#68869b'), sand = new THREE.Color('#697970')
+    // Transfer the exact terrain and grove data from a worker while loading the baked snow.
+    const [{ geometry: landGeometry, forest: distantTrees }] = await Promise.all([loadTerrain(signal), prepareAlpineSnow(signal)])
+    signal.throwIfAborted()
     const color = new THREE.Color()
-    for (let i = 0; i < landPositions.count; i++) {
-      const x = landPositions.getX(i), z = landPositions.getZ(i), h = landPositions.getY(i)
-      const patch = noise(x * 0.18, z * 0.18)
-      const exposedCliff = rockCoverageAt(x, z, h)
-      rockCoverage[i] = exposedCliff
-      color.copy(grass).lerp(heather, smooth((patch - .38) / .40) * .6)
-      color.lerp(rock, Math.max(exposedCliff, smooth((h - 25 + patch * 5) / 20)))
-      if (h < 1.2) color.copy(sand)
-      color.multiplyScalar(0.88 + noise(x * 0.37, z * 0.37) * 0.18)
-      color.toArray(colors, i * 3)
-    }
-    landGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))
-    landGeometry.setAttribute('rockCoverage', new THREE.BufferAttribute(rockCoverage, 1))
-    landGeometry.computeVertexNormals()
     const sampleTerrain = createTerrainSampler(landGeometry)
-    const forestFloor = new THREE.Color('#45534a')
-    for (let i = 0; i < landPositions.count; i++) {
-      const x = landPositions.getX(i), z = landPositions.getZ(i), h = landPositions.getY(i)
-      snowCoverage[i] = snowCoverageAt(x, z, h, landGeometry.attributes.normal.getY(i))
-      const grove = forestDensityAt(x, z, h, sampleTerrain(x, z).slope)
-      color.fromArray(colors, i * 3).lerp(forestFloor, grove * .78)
-      color.lerp(distantBlue, distanceHazeAt(x, z) * .75).toArray(colors, i * 3)
-      rockCoverage[i] *= 1 - grove * .72
-    }
-    landGeometry.setAttribute('snowCoverage', new THREE.BufferAttribute(snowCoverage, 1))
     // Track the terrain during the yield before its material and mesh exist.
     let terrainAttached = false
     cleanups.push(() => { if (!terrainAttached) landGeometry.dispose() })
@@ -173,14 +147,6 @@ export async function createValleyScene(host: HTMLDivElement, settings: { curren
           const up = Math.max(.001, Math.min(1, hit.face!.normal.y))
           surface = { height: hit.point.y, slope: Math.sqrt(1 - up * up) / up, normalUp: up }
         }
-      }
-      return surface
-    }
-    function forestSurface(x: number, z: number) {
-      const surface = sampleTerrain(x, z)
-      // Exposed granite volumes stay bare; the dense forest occupies the valleys between them.
-      if (CLIFF_MASSES.some(mass => Math.hypot((x - mass.x) / mass.width, (z - mass.z) / mass.depth) < 1.28)) {
-        return { ...surface, slope: 2, normalUp: .4 }
       }
       return surface
     }
@@ -259,7 +225,6 @@ export async function createValleyScene(host: HTMLDivElement, settings: { curren
     trees.castShadow = true; trees.receiveShadow = true; trunks.castShadow = true
     world.add(trees, trunks)
 
-    const distantTrees = scatterDistantForest(forestSurface)
     const distantMaterial = pineMaterial()
     distantMaterial.vertexColors = true
     const distantForest = new THREE.InstancedMesh(distantPineGeometry(), distantMaterial, distantTrees.length)
@@ -369,17 +334,22 @@ export async function createValleyScene(host: HTMLDivElement, settings: { curren
 
     const observer = new THREE.Vector3(), look = new THREE.Vector3(), pointer = new THREE.Vector2(), eyeDrift = new THREE.Vector2()
     let needsRender = true, visible = true, aspect = 1.6
-    let renderedWidth = 0, renderedHeight = 0
+    let renderedWidth = 0, renderedHeight = 0, renderedRatio = 0
     function resize() {
       const width = host.clientWidth, height = host.clientHeight
-      if (!width || !height || (width === renderedWidth && height === renderedHeight)) return
-      renderedWidth = width; renderedHeight = height
+      const ratio = Math.min(devicePixelRatio, width < 760 ? 1.3 : 1.6)
+      if (!width || !height || (width === renderedWidth && height === renderedHeight && ratio === renderedRatio)) return
+      renderedWidth = width; renderedHeight = height; renderedRatio = ratio
       aspect = width / height
       const view = skyCameraAt(aspect, scrollJourney.progress)
       observer.fromArray(view.position); look.fromArray(view.target)
       camera.position.copy(observer); camera.lookAt(look)
       camera.aspect = aspect; camera.fov = view.fov; camera.updateProjectionMatrix()
+      renderer.setPixelRatio(ratio); composer.setPixelRatio(ratio)
       renderer.setSize(width, height); composer.setSize(width, height)
+      starMaterial.uniforms.pixelRatio.value = ratio
+      const reflectionSize = width < 760 ? 512 : 768
+      lake.getRenderTarget().setSize(reflectionSize, reflectionSize)
       finish.uniforms.resolution.value.set(width * renderer.getPixelRatio(), height * renderer.getPixelRatio())
       needsRender = true
     }
@@ -407,13 +377,14 @@ export async function createValleyScene(host: HTMLDivElement, settings: { curren
     const dayFog = new THREE.Color('#a3b4bc'), duskFog = new THREE.Color('#dd8b70'), nightFog = new THREE.Color('#31475d')
     const daySun = new THREE.Color('#ffd28b'), sunsetSun = new THREE.Color('#ff713b')
     const dayAmbient = new THREE.Color('#dce8ed'), nightAmbient = new THREE.Color('#91aed5')
-    let frame = 0, previous = 0, elapsed = 0, ambientTime = 0, lastPhase = -1, lastPan = -1, delivered = false, trailStrength = 0, renderedFrames = 0
+    const pacer = createFramePacer(), metrics = sceneMetrics(renderer, host)
+    let frame = 0, elapsed = 0, ambientTime = 0, lastPhase = -1, lastPan = -1, delivered = false, trailStrength = 0, renderedFrames = 0
     cleanups.push(() => cancelAnimationFrame(frame))
     function render(now: number) {
       frame = requestAnimationFrame(render)
-      if (document.hidden || !visible || failed) { previous = now; return }
-      if (now - previous < (host.clientWidth < 760 ? 1000 / 30 : 1000 / 50) && !needsRender) return
-      const dt = Math.min((now - previous) / 1000, 0.1); previous = now
+      if (document.hidden || !visible || failed) { pacer.reset(); return }
+      const dt = pacer.step(now, host.clientWidth < 760 ? 30 : 60, needsRender)
+      if (dt === null) return
       resize()
       const { phase, moving } = atmosphere
       const pan = scrollJourney.progress
@@ -442,6 +413,7 @@ export async function createValleyScene(host: HTMLDivElement, settings: { curren
       starSphere.position.copy(camera.position)
       starSphere.rotation.set(0.18, 0.2, skyRotationAt(phase, settings.current.reduced ? 0 : ambientTime))
       starMaterial.uniforms.opacity.value = stars * 0.92
+      starSphere.visible = stars > 0
       starMaterial.uniforms.time.value = elapsed
       // Exposure trails fade with actual angular speed, alongside the stars' eased slowdown.
       const angularSpeed = lastPhase < 0 || dt <= 0 ? 0 : Math.max(0, phase - lastPhase) / dt
@@ -487,12 +459,17 @@ export async function createValleyScene(host: HTMLDivElement, settings: { curren
       host.dataset.lightBelow = String(projected.y < -1)
       renderer.shadowMap.needsUpdate = phase !== lastPhase || needsRender
       try {
+        metrics?.begin(now)
         composer.render()
+        metrics?.end()
         host.dataset.renderedFrames = String(++renderedFrames)
         if (!delivered && !failed) { delivered = true; onProgress(100); onReady() }
       } catch (error) { failed = true; console.error('Landscape rendering failed', error); onError() }
       lastPhase = phase; lastPan = pan; needsRender = false
     }
+    resize()
+    await renderer.compileAsync(scene, camera)
+    signal.throwIfAborted()
     frame = requestAnimationFrame(render)
 
     return dispose

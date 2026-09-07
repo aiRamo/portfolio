@@ -15,18 +15,18 @@ export function useScrollJourney(reduced: boolean, progress: RefObject<HTMLDivEl
       const viewHeight = stage.offsetHeight
       const flight = journeyAt(scrollY, hero.offsetHeight - viewHeight)
       scrollJourney.progress = flight.progress
+      const scrollable = root.scrollHeight - innerHeight
+      let active = 'home'
+      sections.forEach(section => { if (section.getBoundingClientRect().top <= innerHeight * .45) active = section.id })
+      const measurements = pulls.map(item => ({ item, top: item.element.getBoundingClientRect().top - item.y }))
       root.style.setProperty('--pan-progress', String(flight.progress))
       root.style.setProperty('--sky-reveal', String(flight.sky))
       root.style.setProperty('--hero-visibility', String(flight.heroVisibility))
       root.dataset.heroVisible = String(flight.heroVisibility > .005)
       root.dataset.journeyStage = flight.progress >= .995 ? 'sky' : flight.progress > .01 ? 'ascending' : 'overlook'
-      const scrollable = root.scrollHeight - innerHeight
       progress.current?.style.setProperty('transform', `scaleX(${scrollable > 0 ? scrollY / scrollable : 0})`)
-      let active = 'home'
-      sections.forEach(section => { if (section.getBoundingClientRect().top <= innerHeight * .45) active = section.id })
       setActive(active)
-      // Measure layout before writing transforms. Previous displacement is removed from the sample.
-      const measurements = pulls.map(item => ({ item, top: item.element.getBoundingClientRect().top - item.y }))
+      // All layout measurements precede style writes, including inherited sky properties.
       measurements.forEach(({ item, top }) => {
         const focused = item.element.contains(document.activeElement)
         const pull = contentPullAt(top, innerHeight, reduced || focused)

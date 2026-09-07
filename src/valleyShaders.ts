@@ -61,12 +61,14 @@ export function makeSkyMaterial() {
         float sunDisc=smoothstep(cos(.022),cos(.019),sunDot);
         color+=sunDisc*mix(vec3(4.,2.9,1.1),vec3(4.,.95,.13),twilight)*(1.-cloud*.4);
         float moonDisc=smoothstep(cos(.0175),cos(.015),moonDot);
-        vec3 right=normalize(cross(moon,vec3(0,1,0)));
-        vec3 up=cross(right,moon);
-        vec2 moonUV=vec2(dot(rd,right),dot(rd,up))/.017;
-        float craters=fbm(moonUV*6.)*.21+smoothstep(.1,.36,length(moonUV-vec2(.25,.24)))*.08;
-        float lunarLight=.82+.18*moonUV.x;
-        color+=moonDisc*(vec3(.74,.82,.75)-craters)*lunarLight*night*1.55;
+        if(moonDisc>0. && night>0.) {
+          vec3 right=normalize(cross(moon,vec3(0,1,0)));
+          vec3 up=cross(right,moon);
+          vec2 moonUV=vec2(dot(rd,right),dot(rd,up))/.017;
+          float craters=fbm(moonUV*6.)*.21+smoothstep(.1,.36,length(moonUV-vec2(.25,.24)))*.08;
+          float lunarLight=.82+.18*moonUV.x;
+          color+=moonDisc*(vec3(.74,.82,.75)-craters)*lunarLight*night*1.55;
+        }
         gl_FragColor=vec4(max(color,vec3(0.)),1.);
       }
     `,

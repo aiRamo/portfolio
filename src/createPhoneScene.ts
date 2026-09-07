@@ -2,6 +2,9 @@ import * as THREE from 'three'
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js'
 import { phoneApps } from './phoneApps'
 import { phoneMotionAt, phoneTransitionDuration } from './phoneMotion.mjs'
+import { createPhoneScreen, iconXs, iconY, iconSize } from './phoneScreen'
+import { createFramePacer, phoneDamping } from './frameSchedule.mjs'
+import { sceneMetrics } from './sceneMetrics'
 
 export type PhoneSettings = { selected: number; request: number; active: boolean; reduced: boolean }
 export type PhoneController = { update: () => void; dispose: () => void }
@@ -57,86 +60,43 @@ export async function createPhoneScene(host: HTMLDivElement, settings: { current
     const button = new THREE.Mesh(new THREE.BoxGeometry(.055, length, .11), metal)
     button.position.set(x, y, -.005); phone.add(button)
   }
-  const screenCanvas = document.createElement('canvas'); screenCanvas.width = 900; screenCanvas.height = 1920
-  const context = screenCanvas.getContext('2d')!
-  const texture = new THREE.CanvasTexture(screenCanvas); texture.colorSpace = THREE.SRGBColorSpace
-  texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy())
+  const screen = createPhoneScreen(renderer, images)
   const geometry = new THREE.ShapeGeometry(roundedShape(2.48, 5.29, .26), 18)
   const positions = geometry.attributes.position, uvs = geometry.attributes.uv
   for (let i = 0; i < positions.count; i++) uvs.setXY(i, positions.getX(i) / 2.48 + .5, positions.getY(i) / 5.29 + .5)
-  const display = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ map: texture, toneMapped: false }))
+  const display = new THREE.Mesh(geometry, screen.material)
   display.position.z = .155; phone.add(display)
   const island = new THREE.Mesh(new THREE.ShapeGeometry(roundedShape(.7, .16, .08), 12), new THREE.MeshBasicMaterial({ color: '#06080c' }))
   island.position.set(0, 2.46, .17); phone.add(island)
   const lens = new THREE.Mesh(new THREE.CircleGeometry(.031, 20), new THREE.MeshPhysicalMaterial({ color: '#192f49', metalness: .7, roughness: .06, clearcoat: 1 }))
   lens.position.set(.25, 2.46, .175); phone.add(lens)
 
-  const iconXs = [155, 380, 605], iconY = 690, iconSize = 140
-  let active = -1, target = -1, request = 0, from = -1, elapsed = phoneTransitionDuration, previous = 0, frame = 0, disposed = false, lost = false, clock = 0, lastPhase = ''
+  const pacer = createFramePacer(), metrics = sceneMetrics(renderer, host)
+  let active = -1, target = -1, request = 0, from = -1, elapsed = phoneTransitionDuration, frame = 0, disposed = false, lost = false, clock = 0, lastPhase = ''
+  let prepared = false, dirty = true
   let pointerX = 0, pointerY = 0, rotationX = .055, rotationY = -.25
-  const roundedRect = (x: number, y: number, width: number, height: number, radius: number) => { context.beginPath(); context.roundRect(x, y, width, height, radius) }
-  const home = (tap: number) => {
-    const gradient = context.createLinearGradient(0, 0, 900, 1920)
-    gradient.addColorStop(0, '#153d55'); gradient.addColorStop(.5, '#244b60'); gradient.addColorStop(1, '#12202f')
-    context.fillStyle = gradient; context.fillRect(0, 0, 900, 1920)
-    for (let i = 0; i < 4; i++) {
-      context.fillStyle = ['#52717c', '#385d6b', '#234353', '#193342'][i]
-      context.beginPath(); context.moveTo(-50, 1500 + i * 55)
-      context.bezierCurveTo(120, 950 + i * 135, 270, 1410, 430, 1130 + i * 120)
-      context.bezierCurveTo(590, 920 + i * 160, 660, 1290, 950, 1080 + i * 175)
-      context.lineTo(950, 1950); context.lineTo(-50, 1950); context.fill()
-    }
-    context.textAlign = 'center'; context.fillStyle = '#f5f7f4'
-    context.font = '500 100px sans-serif'; context.fillText('9:41', 450, 355)
-    context.font = '30px sans-serif'; context.fillText('Built for the world outside.', 450, 419)
-    phoneApps.forEach((app, i) => {
-      const press = i === target && tap > 0 ? 1 - Math.sin(tap * Math.PI) * .1 : 1
-      const size = iconSize * press, x = iconXs[i] + (iconSize - size) / 2, y = iconY + (iconSize - size) / 2
-      context.save(); roundedRect(x, y, size, size, 32); context.clip(); context.drawImage(images[i].icon, x, y, size, size); context.restore()
-      context.font = '25px sans-serif'; context.fillStyle = '#fff'; context.fillText(app.short, iconXs[i] + 70, iconY + 185)
-      if (i === target && tap > 0) {
-        context.strokeStyle = `rgba(255,255,255,${Math.sin(tap * Math.PI) * .85})`; context.lineWidth = 4
-        context.beginPath(); context.arc(iconXs[i] + 70, iconY + 70, 82 + tap * 32, 0, Math.PI * 2); context.stroke()
-        context.fillStyle = `rgba(255,255,255,${Math.sin(tap * Math.PI) * .4})`
-        context.beginPath(); context.arc(iconXs[i] + 70, iconY + 70, 28, 0, Math.PI * 2); context.fill()
-      }
-    })
-    context.fillStyle = '#ffffff19'; roundedRect(190, 1680, 520, 100, 50); context.fill()
-    context.font = '25px sans-serif'; context.fillStyle = '#e1ecee'; context.fillText('Three apps. One connected world.', 450, 1741)
-  }
-  const appWindow = (index: number, progress: number) => {
-    const x = iconXs[index] * (1 - progress), y = iconY * (1 - progress)
-    const width = iconSize + (900 - iconSize) * progress, height = iconSize + (1920 - iconSize) * progress
-    context.save(); roundedRect(x, y, width, height, 34 * (1 - progress)); context.clip()
-    context.translate(x, y); context.scale(width / 900, height / 1920)
-    context.fillStyle = index === 0 ? '#ffffff' : index === 1 ? '#1e1e1e' : '#131b22'; context.fillRect(0, 0, 900, 1920)
-    const image = images[index].screen, fit = Math.min(900 / image.width, 1770 / image.height)
-    context.drawImage(image, (900 - image.width * fit) / 2, 108 + (1770 - image.height * fit) / 2, image.width * fit, image.height * fit)
-    context.restore()
-  }
   const paint = () => {
     const motion = target < 0 ? { phase: 'home', app: 0, tap: 0 } : phoneMotionAt(elapsed, from >= 0)
-    home(motion.tap)
-    if (motion.phase === 'closing' && from >= 0) appWindow(from, motion.app)
-    if (motion.phase === 'opening' || motion.phase === 'app') appWindow(target, motion.app)
-    const light = (motion.phase === 'app' || motion.phase === 'opening') && target === 0 || motion.phase === 'closing' && from === 0
-    context.fillStyle = light ? '#15212a' : '#f6f8f9'; context.textAlign = 'left'; context.font = 'bold 24px sans-serif'; context.fillText('9:41', 65, 75)
-    context.fillRect(754, 53, 9, 18); context.fillRect(768, 47, 9, 24); context.fillRect(782, 40, 9, 31)
-    context.strokeStyle = context.fillStyle; context.lineWidth = 3; roundedRect(812, 45, 45, 23, 5); context.stroke(); context.fillRect(818, 51, 30, 11)
-    roundedRect(315, 1896, 270, 8, 4); context.fill()
-    texture.needsUpdate = true
+    const index = motion.phase === 'closing' ? from : target
+    const showingApp = motion.phase === 'closing' || motion.phase === 'opening' || motion.phase === 'app'
+    screen.update(target, index, showingApp ? motion.app : -1, motion.tap, showingApp && index === 0)
     if (lastPhase !== motion.phase) { lastPhase = motion.phase; host.dataset.phonePhase = motion.phase; report(motion.phase) }
     if (motion.phase === 'app') { active = target; host.dataset.phoneApp = phoneApps[target].id }
   }
   const render = () => {
     phone.rotation.set(rotationX, rotationY, -.018)
     phone.position.y = settings.current.reduced ? 0 : Math.sin(clock * .65) * .028
+    if (!prepared || disposed || lost) return
+    metrics?.begin(performance.now())
     renderer.render(scene, camera)
+    metrics?.end()
   }
   const tick = (now: number) => {
     frame = 0
     if (disposed || lost || !settings.current.active || document.hidden) return
-    const delta = Math.min((now - previous) / 1000, .05); previous = now; clock += delta
+    const delta = pacer.step(now, 60, dirty)
+    if (delta === null) { frame = requestAnimationFrame(tick); return }
+    dirty = false; clock += delta
     if (request !== settings.current.request) {
       request = settings.current.request
       if (target !== settings.current.selected) {
@@ -149,18 +109,23 @@ export async function createPhoneScene(host: HTMLDivElement, settings: { current
     if (elapsed < phoneTransitionDuration) { elapsed = Math.min(phoneTransitionDuration, elapsed + delta); paint() }
     const reduce = settings.current.reduced
     const tilt = elapsed < phoneTransitionDuration ? Math.sin(elapsed / phoneTransitionDuration * Math.PI) * .1 : 0
-    rotationX += ((.045 + (reduce ? 0 : pointerY * .04)) - rotationX) * .08
-    rotationY += ((-.22 + (reduce ? 0 : pointerX * .12) + tilt) - rotationY) * .08
-    render(); frame = requestAnimationFrame(tick)
+    const goalX = .045 + (reduce ? 0 : pointerY * .04), goalY = -.22 + (reduce ? 0 : pointerX * .12) + tilt
+    const damping = phoneDamping(delta)
+    rotationX += (goalX - rotationX) * damping
+    rotationY += (goalY - rotationY) * damping
+    render()
+    if (!reduce || elapsed < phoneTransitionDuration || Math.abs(goalX - rotationX) + Math.abs(goalY - rotationY) > .0001) frame = requestAnimationFrame(tick)
   }
   const update = () => {
-    if (disposed || lost) return
-    if (!settings.current.active || document.hidden) { cancelAnimationFrame(frame); frame = 0; return }
-    if (!frame) { previous = performance.now(); frame = requestAnimationFrame(tick) }
+    if (disposed || lost || !prepared) return
+    dirty = true
+    if (!settings.current.active || document.hidden) { cancelAnimationFrame(frame); frame = 0; pacer.reset(); return }
+    if (!frame) { pacer.reset(); frame = requestAnimationFrame(tick) }
   }
   const resize = () => {
     const width = host.clientWidth, height = host.clientHeight
     if (!width || !height) return
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2))
     renderer.setSize(width, height); camera.aspect = width / height
     // Fit both dimensions, including the beveled frame and tilt, in a narrow column.
     const halfFov = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))
@@ -172,12 +137,12 @@ export async function createPhoneScene(host: HTMLDivElement, settings: { current
     if (event.pointerType !== 'mouse') return
     const rect = host.getBoundingClientRect(); pointerX = (event.clientX - rect.left) / rect.width * 2 - 1; pointerY = (event.clientY - rect.top) / rect.height * 2 - 1
   }
-  const raycaster = new THREE.Raycaster()
+  const raycaster = new THREE.Raycaster(), pointerPosition = new THREE.Vector2()
   const hitIcon = (event: MouseEvent) => {
     if (!settings.current.active || target >= 0) return -1
     const rect = renderer.domElement.getBoundingClientRect()
     if (!rect.width || !rect.height) return -1
-    raycaster.setFromCamera(new THREE.Vector2((event.clientX - rect.left) / rect.width * 2 - 1, 1 - (event.clientY - rect.top) / rect.height * 2), camera)
+    raycaster.setFromCamera(pointerPosition.set((event.clientX - rect.left) / rect.width * 2 - 1, 1 - (event.clientY - rect.top) / rect.height * 2), camera)
     const hit = raycaster.intersectObject(display)[0]
     if (!hit?.uv) return -1
     const x = hit.uv.x * 900, y = (1 - hit.uv.y) * 1920
@@ -194,8 +159,8 @@ export async function createPhoneScene(host: HTMLDivElement, settings: { current
   document.addEventListener('visibilitychange', update)
   const contextLost = (event: Event) => { event.preventDefault(); lost = true; report('unavailable'); cancelAnimationFrame(frame); frame = 0 }
   renderer.domElement.addEventListener('webglcontextlost', contextLost)
-  paint(); resize(); update()
-  return { update, dispose: () => {
+  const controller = { update, dispose: () => {
+    if (disposed) return
     disposed = true; cancelAnimationFrame(frame); observer.disconnect()
     host.removeEventListener('pointermove', pointer); host.removeEventListener('pointerleave', leave); document.removeEventListener('visibilitychange', update)
     host.removeEventListener('click', click); host.style.cursor = ''
@@ -203,6 +168,18 @@ export async function createPhoneScene(host: HTMLDivElement, settings: { current
     const geometries = new Set<THREE.BufferGeometry>(), materials = new Set<THREE.Material>()
     phone.traverse(object => { if (object instanceof THREE.Mesh) { geometries.add(object.geometry); for (const material of Array.isArray(object.material) ? object.material : [object.material]) materials.add(material) } })
     geometries.forEach(geometry => geometry.dispose()); materials.forEach(material => material.dispose())
-    texture.dispose(); environment.dispose(); renderer.dispose(); renderer.domElement.remove()
+    screen.dispose(); environment.dispose(); renderer.dispose(); renderer.domElement.remove()
   } }
+  const abort = () => controller.dispose()
+  signal.addEventListener('abort', abort, { once: true })
+  try {
+    paint(); resize()
+    await screen.prepare(signal)
+    await renderer.compileAsync(scene, camera)
+    signal.throwIfAborted()
+    if (lost) throw new Error('Phone rendering context was lost')
+    prepared = true; render(); update()
+    return controller
+  } catch (error) { controller.dispose(); throw error }
+  finally { signal.removeEventListener('abort', abort) }
 }

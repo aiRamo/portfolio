@@ -8,6 +8,7 @@ export function PhoneShowcase({ reduced }: { reduced: boolean }) {
   const [selected, setSelected] = useState<number | null>(null)
   const [ready, setReady] = useState(false)
   const [phase, setPhase] = useState('loading')
+  const [approaching, setApproaching] = useState(false)
   const host = useRef<HTMLDivElement>(null)
   const controller = useRef<PhoneController | null>(null)
   const settings = useRef<PhoneSettings>({ selected: -1, request: 0, active: false, reduced })
@@ -15,6 +16,7 @@ export function PhoneShowcase({ reduced }: { reduced: boolean }) {
   const app = selected === null ? null : phoneApps[selected]
   const select = (index: number) => {
     setSelected(index)
+    setApproaching(true)
     settings.current.selected = index; settings.current.request++
     controller.current?.update()
   }
@@ -22,13 +24,30 @@ export function PhoneShowcase({ reduced }: { reduced: boolean }) {
     const visit = () => {
       const active = document.documentElement.dataset.presentationSection === 'mobile-apps'
       settings.current.active = active
+      if (active) setApproaching(true)
       controller.current?.update()
     }
     document.addEventListener('presentationchange', visit); visit()
     return () => document.removeEventListener('presentationchange', visit)
   }, [])
+  useEffect(() => { controller.current?.update() }, [reduced])
   useEffect(() => {
-    if (!host.current) return
+    const section = host.current?.closest('section')
+    if (!section || approaching) return
+    const prepare = () => setApproaching(true)
+    const observer = new IntersectionObserver(entries => {
+      if (entries.some(entry => entry.isIntersecting)) { prepare(); observer.disconnect() }
+    }, { rootMargin: '600px 0px' })
+    observer.observe(section)
+    // Desktop presentation hides future slides, so warm the phone at the introduction too.
+    const nearby = () => {
+      if (['intro', 'mobile-apps'].includes(document.documentElement.dataset.presentationSection || '')) prepare()
+    }
+    document.addEventListener('presentationchange', nearby); nearby()
+    return () => { observer.disconnect(); document.removeEventListener('presentationchange', nearby) }
+  }, [approaching])
+  useEffect(() => {
+    if (!host.current || !approaching) return
     const abort = new AbortController(), element = host.current
     void import('./createPhoneScene').then(module => module.createPhoneScene(element, settings, abort.signal, value => {
       if (!abort.signal.aborted) setPhase(value)
@@ -41,7 +60,7 @@ export function PhoneShowcase({ reduced }: { reduced: boolean }) {
       console.error('Unable to prepare the phone showcase', error); setPhase('unavailable')
     })
     return () => { abort.abort(); controller.current?.dispose(); controller.current = null }
-  }, [])
+  }, [approaching])
   const keyboard = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
     const direction = ['ArrowRight', 'ArrowDown'].includes(event.key) ? 1 : ['ArrowLeft', 'ArrowUp'].includes(event.key) ? -1 : 0
     if (!direction && !['Home', 'End'].includes(event.key)) return
