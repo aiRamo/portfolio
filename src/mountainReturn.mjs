@@ -4,7 +4,7 @@ import { clamp } from './terrainMath.mjs'
 export function mountainReturnAt(elapsed, startProgress = 1, reduced = false) {
   const fadeOut = reduced ? 120 : 260
   // Explicit return navigation always gets the full tilt, including reduced-motion browsers.
-  const tilt = 3200
+  const tilt = 2400
   const fadeIn = reduced ? 160 : 420
   if (elapsed < fadeOut) return { phase: 'out', opacity: 1 - clamp(elapsed / fadeOut, 0, 1), progress: startProgress, reset: false, done: false }
   if (elapsed < fadeOut + tilt) return { phase: 'tilt', opacity: 0, progress: startProgress * (1 - (elapsed - fadeOut) / tilt), reset: true, done: false }
