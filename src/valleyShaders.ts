@@ -20,11 +20,13 @@ export function makeSkyMaterial() {
       sun: { value: new THREE.Vector3() }, moon: { value: new THREE.Vector3() },
       night: { value: 0 }, twilight: { value: 0 }, golden: { value: 0 }, time: { value: 0 },
       ascent: { value: 0 },
+      cosmosRotation: { value: new THREE.Matrix3() },
     },
     vertexShader: `varying vec3 vDirection; void main(){vDirection=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
     fragmentShader: `
       varying vec3 vDirection; uniform vec3 sun; uniform vec3 moon;
       uniform float night; uniform float twilight; uniform float golden; uniform float time; uniform float ascent;
+      uniform mat3 cosmosRotation;
       ${noiseGLSL}
       void main(){
         vec3 rd=normalize(vDirection);
@@ -40,6 +42,20 @@ export function makeSkyMaterial() {
         float moonDot=max(0.,dot(rd,moon));
         color+=vec3(1.,.54,.14)*pow(sunDot,12.)*(.16+twilight*.6+golden*.08)*(1.-night*.7);
         color+=vec3(.24,.34,.58)*pow(moonDot,90.)*night*.12;
+
+        // A restrained, broken band of interstellar haze, fixed to the rotating star field.
+        // Reuse the sky pass, with no extra geometry, textures, or daytime noise work.
+        if(night>.15) {
+          vec3 cosmos=cosmosRotation*rd;
+          vec2 nebulaUV=vec2(dot(cosmos,vec3(.8,0.,-.6)),dot(cosmos,vec3(.36,.8,.48)));
+          float bandDistance=dot(cosmos,vec3(.48,-.6,.64));
+          float broad=fbm(nebulaUV*3.2+vec2(7.4,19.2));
+          float filaments=fbm(nebulaUV*vec2(9.,18.)+broad*2.);
+          float band=exp(-pow((bandDistance+(broad-.5)*.2)/.19,2.));
+          float veil=band*smoothstep(.34,.72,filaments)*smoothstep(.02,.35,rd.y);
+          vec3 dust=mix(vec3(.008,.005,.010),vec3(.006,.010,.018),broad);
+          color+=dust*veil*smoothstep(.4,1.,night)*(1.-twilight)*(1.-pow(moonDot,18.)*.75);
+        }
 
         // Soft, wind-stretched cloud banks: density and lit edges travel together.
         vec2 cloudUV=rd.xz/max(.16,rd.y+.25)*1.9+vec2(time*.024,time*.004);

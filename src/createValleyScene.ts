@@ -297,17 +297,22 @@ export async function createValleyScene(host: HTMLDivElement, settings: { curren
 
     // The actual star field rotates as a single celestial sphere, with short exposure trails.
     const starSphere = new THREE.Group()
+    const cosmosRotation = new THREE.Matrix4()
     const starPositions: number[] = [], starSizes: number[] = [], starColors: number[] = [], trailPositions: number[] = []
-    for (let i = 0; i < 1650; i++) {
+    for (let i = 0; i < 8000; i++) {
       const y = random() * 2 - 1, angle = random() * Math.PI * 2
       const radius = Math.sqrt(1 - y * y)
       const point = new THREE.Vector3(Math.cos(angle) * radius, y, Math.sin(angle) * radius).multiplyScalar(390)
       starPositions.push(...point.toArray())
-      starSizes.push(0.8 + random() ** 4 * 2.5)
-      color.setHSL(0.12 + random() * 0.52, 0.13, 0.7 + random() * 0.25)
+      // Keep the familiar bright stars; most of the additional field is fine, faint starlight.
+      const bright = i < 1650
+      starSizes.push(bright ? 0.8 + random() ** 4 * 2.5 : 0.75 + random() ** 3 * 0.9)
+      color.setHSL(0.12 + random() * 0.52, 0.13, bright ? 0.7 + random() * 0.25 : 0.38 + random() * 0.3)
       starColors.push(color.r, color.g, color.b)
-      const tail = point.clone().applyAxisAngle(new THREE.Vector3(0, 0, 1), 0.015)
-      trailPositions.push(...point.toArray(), ...tail.toArray())
+      if (bright) {
+        const tail = point.clone().applyAxisAngle(new THREE.Vector3(0, 0, 1), 0.015)
+        trailPositions.push(...point.toArray(), ...tail.toArray())
+      }
     }
     const starGeometry = new THREE.BufferGeometry()
     starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starPositions, 3))
@@ -412,6 +417,8 @@ export async function createValleyScene(host: HTMLDivElement, settings: { curren
       sky.position.copy(camera.position)
       starSphere.position.copy(camera.position)
       starSphere.rotation.set(0.18, 0.2, skyRotationAt(phase, settings.current.reduced ? 0 : ambientTime))
+      cosmosRotation.makeRotationFromEuler(starSphere.rotation)
+      skyMaterial.uniforms.cosmosRotation.value.setFromMatrix4(cosmosRotation).transpose()
       starMaterial.uniforms.opacity.value = stars * 0.92
       starSphere.visible = stars > 0
       starMaterial.uniforms.time.value = elapsed
