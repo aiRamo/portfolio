@@ -6,7 +6,7 @@ import './ai-adoption.css'
 const recipients = [
   { x: 105, label: 'Engineers', detail: 'Agentic development', benefit: 'I taught agentic coding, testing, and documentation.', path: 'M272 139 C245 190 105 186 105 262' },
   { x: 300, label: 'Partner teams', detail: 'Shared practices', benefit: 'I helped adapt agentic workflows to their own work.', path: 'M300 148 L300 262' },
-  { x: 495, label: 'Project teams', detail: 'Connected planning', benefit: 'I connected AI agents to the company’s core project management platform.', path: 'M328 139 C355 190 495 186 495 262' },
+  { x: 495, label: 'Project teams', detail: 'Connected planning', benefit: 'I connected AI agents to the core project management platform for the entire company.', path: 'M328 139 C355 190 495 186 495 262' },
 ]
 function nodeColor(progress: number) {
   return `rgb(${Math.round(255 - 179 * progress)}, ${Math.round(255 - 29 * progress)}, ${Math.round(255 - 109 * progress)})`
