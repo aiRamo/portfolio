@@ -50,7 +50,6 @@
   .skip-link { position: fixed; top: -100px; left: 20px; z-index: 100; padding: 15px 22px; background: rgb(var(--ink)); color: rgb(var(--page)); }
   .skip-link:focus { top: 15px; }
   .reading-progress { position: fixed; top: 0; left: 0; height: 2px; width: 100%; background: rgb(var(--accent)); transform-origin: left; transform: scaleX(0); z-index: 60; }
-  .light-wash { position: fixed; inset: 0; z-index: 20; pointer-events: none; background: radial-gradient(ellipse at var(--light-x) 5%, #ffc47b35, transparent 65%); opacity: var(--twilight); mix-blend-mode: soft-light; }
   .site-header { position: absolute; width: 100%; top: 0; z-index: 30; display: flex; align-items: center; padding: 32px 5%; gap: 36px; }
   .wordmark { display: inline-flex; align-items: center; gap: 9px; font-size: 21px; font-weight: 650; letter-spacing: -.9px; white-space: nowrap; }
   .brand-icon { margin-right: 6px; }
@@ -407,7 +406,7 @@
     .about-copy .stats { margin-top: 16px; padding-top: 18px; }
   }
   @media print {
-    .site-header, .marquee, .project-visual, .page-coordinate, .reading-progress, .light-wash, .contact h2 > a, .text-link, .back-to-top { display: none; }
+    .site-header, .marquee, .project-visual, .page-coordinate, .reading-progress, .contact h2 > a, .text-link, .back-to-top { display: none; }
     .reveal { opacity: 1; transform: none; }
     :root { --page: 255 255 255; --ink: 20 30 25; --muted: 50 60 50; }
     .section-shell { width: 100%; }

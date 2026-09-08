@@ -18,8 +18,7 @@
      the shorter sticky hero panel, so Safari's expanded viewport exposes no edge. */
   .scene-shade { position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: var(--hero-visibility); background: linear-gradient(90deg, #07191450, transparent 58%), linear-gradient(0deg, #061710c2, transparent 37%), linear-gradient(180deg, #0b1f2526, transparent 20%); }
   @media (max-width: 760px), (hover: none) and (pointer: coarse) {
-    /* Show the landscape directly, without shading or the sunset light wash. */
-    .scene-shade, .light-wash { display: none; }
+    .scene-shade { display: none; }
   }
   .hero-copy { opacity: var(--hero-visibility); translate: 0 calc(var(--pan-progress) * -90px); }
   :root[data-hero-visible='false'] .hero-stage { visibility: hidden; }
@@ -28,7 +27,6 @@
   .site-header { position: fixed; color: color-mix(in srgb, rgb(var(--hero-ink)), rgb(var(--ink)) calc(var(--sky-reveal) * 100%)); text-shadow: 0 1px 16px rgb(var(--page) / .15); background: linear-gradient(180deg, rgb(var(--page) / calc(var(--sky-reveal) * .86)), transparent); }
   .site-header .theme-picker { border-color: currentColor; background: rgb(var(--panel) / .12); }
   .site-header :focus-visible { outline-color: currentColor; }
-  .light-wash { background: radial-gradient(ellipse at var(--light-x) var(--light-y), #ffd19755, transparent 75%); }
 
   .sky-content { position: relative; padding-bottom: 24px; }
   :root[data-mountain-return] .sky-pause { visibility: hidden; }

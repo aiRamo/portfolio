@@ -38,7 +38,6 @@ export default function App() {
     <a className="skip-link" href="#work">Skip to selected work</a>
     <div className="reading-progress" ref={progress} aria-hidden="true" />
     <div className="scene-shade" aria-hidden="true" />
-    <div className="light-wash" aria-hidden="true" />
     <header className="site-header"><SectionNavigation active={active} />
       <div className="theme-picker">
         {mode === 'sunset' ? <Sunset className="theme-icon" size={16} aria-hidden="true" /> : mode === 'dark' ? <Moon className="theme-icon" size={16} aria-hidden="true" /> : <Sun className="theme-icon" size={16} aria-hidden="true" />}
