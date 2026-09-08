@@ -46,6 +46,11 @@
   :root[data-journey-stage='sky'] .sky-pause { display: flex; }
   .page-coordinate { color: rgb(var(--ink) / .7); }
 
+  @media (min-width: 761px) {
+    .hero-pause { display: none; }
+    .sky-pause { display: flex; }
+  }
+
   @media (max-width: 760px) {
     html { scroll-padding-top: 100px; }
     .intro { min-height: 76svh; padding-block: 80px 95px; }
