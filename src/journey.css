@@ -14,7 +14,7 @@
   /* Keep the readability gradient on the same viewport as the landscape, outside
      the shorter sticky hero panel, so Safari's expanded viewport exposes no edge. */
   .scene-shade { position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: var(--hero-visibility); background: linear-gradient(90deg, #07191450, transparent 58%), linear-gradient(0deg, #061710c2, transparent 37%), linear-gradient(180deg, #0b1f2526, transparent 20%); }
-  .hero-copy, .hero-bottom { opacity: var(--hero-visibility); translate: 0 calc(var(--pan-progress) * -90px); }
+  .hero-copy { opacity: var(--hero-visibility); translate: 0 calc(var(--pan-progress) * -90px); }
   :root[data-hero-visible='false'] .hero-stage { visibility: hidden; }
   .valley-fallback { opacity: var(--hero-visibility); }
 
@@ -58,15 +58,15 @@
   }
   @media (max-width: 760px) and (max-height: 740px) {
     /* Reserve the upper half for the camp on shorter phones, too. */
-    .hero-copy { bottom: 16%; }
     .hero h1 { font-size: 54px; }
     .hero-eyebrow { margin-bottom: 10px; }
     .hero-copy > p { font-size: .875rem; line-height: 1.55; margin-top: 12px; }
-    .primary-link { margin-top: 4px; padding-block: 8px; }
+    .hero-actions { margin-top: 4px; }
+    .primary-link { padding-block: 8px; }
   }
   @media (prefers-reduced-motion: reduce) {
     .sky-content .reveal { translate: none; opacity: 1; }
-    .hero-copy, .hero-bottom { translate: none; }
+    .hero-copy { translate: none; }
   }
   @media print {
     .scene-backdrop, .scene-shade, .sky-pause { display: none; }

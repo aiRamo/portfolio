@@ -12,7 +12,7 @@ import { Skills } from './Skills'
 const Valley = lazy(() => import('./Valley'))
 
 export default function App() {
-  const { dark, toggle, transitioning, reduced, paused, setPaused } = useAtmosphere()
+  const { dark, toggle, reduced, paused, setPaused } = useAtmosphere()
   const [active, setActive] = useState('home')
   const [sceneProgress, setSceneProgress] = useState(3)
   const [sceneReady, setSceneReady] = useState(false)
@@ -43,8 +43,15 @@ export default function App() {
     <main>
       <section className="hero" id="home" data-section data-slide="The overlook">
         <div className="hero-stage">
-        <div className="hero-copy"><div className="eyebrow hero-eyebrow"><span className="status-dot" /> SOFTWARE ENGINEER · PRODUCT BUILDER</div><h1>Built with<br /><em>curiosity.</em></h1><p>I’m Adrian. I connect thoughtful software<br className="desktop-break" /> to the world beyond the screen.</p><a className="primary-link" href="#intro">Next chapter <span><ArrowDown size={18} /></span></a><div className="hero-footnote"><span /> A little perspective changes everything.</div></div>
-        <div className="hero-bottom"><div className="scene-state"><span className="status-dot" /><span aria-live="polite">{transitioning ? dark ? 'Chasing the last light' : 'Here comes the sun' : dark ? 'A moment in the moonlight' : 'Somewhere in the daylight'}</span></div><div className="scene-controls"><span>{dark ? 'NIGHTFALL' : 'DAYLIGHT'} <span className="scene-separator">/</span> {paused ? 'STILL SCENE' : 'LIVE SCENE'}</span><button onClick={() => setPaused(!paused)} aria-label={paused ? 'Resume landscape animation' : 'Pause landscape animation'} aria-pressed={paused}>{paused ? <Play size={13} /> : <Pause size={13} />}</button></div></div>
+        <div className="hero-copy">
+          <div className="eyebrow hero-eyebrow"><span className="status-dot" /> SOFTWARE ENGINEER · PRODUCT BUILDER</div>
+          <h1>Built with<br /><em>curiosity.</em></h1>
+          <p>I’m Adrian. I connect thoughtful software<br className="desktop-break" /> to the world beyond the screen.</p>
+          <div className="hero-actions">
+            <a className="primary-link" href="#intro">Next chapter <span><ArrowDown size={18} /></span></a>
+            <button className="hero-pause" onClick={() => setPaused(!paused)} aria-label={paused ? 'Resume landscape animation' : 'Pause landscape animation'} aria-pressed={paused}>{paused ? <Play size={13} /> : <Pause size={13} />}</button>
+          </div>
+        </div>
         </div>
       </section>
 
