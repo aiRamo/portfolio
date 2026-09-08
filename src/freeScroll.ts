@@ -9,6 +9,8 @@ export function attachFreeScroll(reduced: boolean, resume: boolean) {
   const content = document.querySelector<HTMLElement>('.portfolio-content')!
   const panels = [...document.querySelectorAll<HTMLElement>('[data-slide]')]
   let initialized = false, active = -1, frame = 0, observation = 0
+  let layoutDirty = true
+  const panelTops: number[] = []
   let smoothFrame = 0, smoothTarget = scrollY
   let cancelReturn: (() => void) | undefined
   const ready = () => content.dataset.reveal === 'content'
@@ -23,8 +25,9 @@ export function attachFreeScroll(reduced: boolean, resume: boolean) {
   const update = () => {
     observation = 0
     if (!initialized) return
+    if (layoutDirty) { panels.forEach((panel, index) => { panelTops[index] = layoutTop(panel) }); layoutDirty = false }
     let next = 0
-    panels.forEach((panel, index) => { if (layoutTop(panel) - scrollY <= innerHeight * .45) next = index })
+    panelTops.forEach((top, index) => { if (top - scrollY <= innerHeight * .45) next = index })
     if (next === active) return
     active = next
     const panel = panels[active]
@@ -130,10 +133,11 @@ export function attachFreeScroll(reduced: boolean, resume: boolean) {
   root.dataset.sectionScrolling = 'false'
   const observer = new MutationObserver(initialize)
   observer.observe(content, { attributes: true, attributeFilter: ['data-reveal'] })
-  const resize = new ResizeObserver(schedule)
+  const measure = () => { layoutDirty = true; schedule() }
+  const resize = new ResizeObserver(measure)
   panels.forEach(panel => resize.observe(panel))
   addEventListener('scroll', schedule, { passive: true })
-  addEventListener('resize', schedule)
+  addEventListener('resize', measure)
   addEventListener('wheel', wheel, { passive: false })
   // Touch keeps the browser's smooth, inertial scrolling and interrupts queued motion.
   addEventListener('touchstart', cancel, { passive: true })
@@ -145,7 +149,7 @@ export function attachFreeScroll(reduced: boolean, resume: boolean) {
   return () => {
     cancelReturn?.()
     cancel(); cancelAnimationFrame(observation); observer.disconnect(); resize.disconnect()
-    removeEventListener('scroll', schedule); removeEventListener('resize', schedule)
+    removeEventListener('scroll', schedule); removeEventListener('resize', measure)
     removeEventListener('wheel', wheel); removeEventListener('touchstart', cancel); removeEventListener('keydown', key)
     removeEventListener('popstate', historyChange); removeEventListener('hashchange', historyChange)
     document.removeEventListener('click', click)

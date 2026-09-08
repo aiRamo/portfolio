@@ -15,7 +15,7 @@ import { prepareAlpineSnow } from './alpineSnow'
 import { createFramePacer } from './frameSchedule.mjs'
 import { sceneMetrics } from './sceneMetrics'
 import { CLIFF_MASSES, cliffMassGeometry, talusGeometry } from './cliffs.mjs'
-import { scrollJourney, skyCameraAt } from './scrollJourney.mjs'
+import { scrollJourney, skyCameraAt, currentJourneyProgress } from './scrollJourney.mjs'
 import { createSkyAircraft } from './skyAircraft'
 import { createSkyBirds } from './skyBirds'
 import { lakeGeometry } from './landscape.mjs'
@@ -47,9 +47,12 @@ export async function createValleyScene(host: HTMLDivElement, settings: { curren
   }
   try {
     await checkpoint(8)
-    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'low-power' })
+    // The composer already renders offscreen; MSAA on its final fullscreen copy
+    // adds bandwidth without smoothing the geometry in that offscreen image.
+    const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' })
     cleanups.push(() => { renderer.dispose(); renderer.domElement.remove() })
-    renderer.setPixelRatio(Math.min(devicePixelRatio, host.clientWidth < 760 ? 1.3 : 1.6))
+    const compactView = matchMedia('(max-width: 760px), (hover: none) and (pointer: coarse)')
+    renderer.setPixelRatio(Math.min(devicePixelRatio, compactView.matches ? 1 : 1.6))
     renderer.shadowMap.enabled = true
     renderer.shadowMap.type = THREE.PCFShadowMap
     renderer.shadowMap.autoUpdate = false
@@ -186,6 +189,9 @@ export async function createValleyScene(host: HTMLDivElement, settings: { curren
     lake.rotation.x = -Math.PI / 2
     lake.position.set(TARN.x, 0, TARN.z)
     world.add(lake)
+    lake.updateMatrixWorld(true)
+    const lakeBounds = new THREE.Box3().setFromObject(lake).expandByScalar(.1)
+    const viewFrustum = new THREE.Frustum(), viewProjection = new THREE.Matrix4()
     cleanups.push(() => lake.getRenderTarget().dispose())
     const waterMaterial = lake.material as THREE.ShaderMaterial
 
@@ -362,19 +368,22 @@ export async function createValleyScene(host: HTMLDivElement, settings: { curren
     await checkpoint(97)
 
     const observer = new THREE.Vector3(), look = new THREE.Vector3(), pointer = new THREE.Vector2(), eyeDrift = new THREE.Vector2()
-    let needsRender = true, visible = true, aspect = 1.6
+    let needsRender = true, sizeDirty = true, visible = true, aspect = 1.6
     let renderedWidth = 0, renderedHeight = 0, renderedRatio = 0
     function resize() {
+      if (!sizeDirty) return
+      sizeDirty = false
       const width = host.clientWidth, height = host.clientHeight
-      const ratio = Math.min(devicePixelRatio, width < 760 ? 1.3 : 1.6)
+      const ratio = Math.min(devicePixelRatio, compactView.matches ? 1 : 1.6)
       if (!width || !height || (width === renderedWidth && height === renderedHeight && ratio === renderedRatio)) return
       renderedWidth = width; renderedHeight = height; renderedRatio = ratio
       aspect = width / height
-      const view = skyCameraAt(aspect, scrollJourney.progress)
+      const view = skyCameraAt(aspect, currentJourneyProgress(scrollY))
       observer.fromArray(view.position); look.fromArray(view.target)
       camera.position.copy(observer); camera.lookAt(look)
       camera.aspect = aspect; camera.fov = view.fov; camera.updateProjectionMatrix()
-      renderer.setPixelRatio(ratio); composer.setPixelRatio(ratio)
+      // Changing the ratio also reallocates targets: don't do it again on each resize.
+      if (renderer.getPixelRatio() !== ratio) { renderer.setPixelRatio(ratio); composer.setPixelRatio(ratio) }
       renderer.setSize(width, height); composer.setSize(width, height)
       starMaterial.uniforms.pixelRatio.value = ratio
       const reflectionSize = width < 760 ? 512 : 768
@@ -384,8 +393,11 @@ export async function createValleyScene(host: HTMLDivElement, settings: { curren
     }
     // Buffer resizing clears the canvas. Do it immediately before drawing, never
     // in a ResizeObserver callback between two visible frames.
-    const resizeObserver = new ResizeObserver(() => { needsRender = true }); resizeObserver.observe(host)
-    cleanups.push(() => resizeObserver.disconnect())
+    const invalidateSize = () => { sizeDirty = true; needsRender = true }
+    const resizeObserver = new ResizeObserver(invalidateSize); resizeObserver.observe(host)
+    addEventListener('resize', invalidateSize)
+    compactView.addEventListener('change', invalidateSize)
+    cleanups.push(() => { resizeObserver.disconnect(); removeEventListener('resize', invalidateSize); compactView.removeEventListener('change', invalidateSize) })
     const intersection = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; if (visible) needsRender = true }, { rootMargin: '80px' })
     intersection.observe(host)
     cleanups.push(() => intersection.disconnect())
@@ -408,15 +420,20 @@ export async function createValleyScene(host: HTMLDivElement, settings: { curren
     const dayAmbient = new THREE.Color('#dce8ed'), nightAmbient = new THREE.Color('#91aed5')
     const pacer = createFramePacer(), metrics = sceneMetrics(renderer, host)
     let frame = 0, elapsed = 0, ambientTime = 0, lastPhase = -1, lastPan = -1, delivered = false, trailStrength = 0, renderedFrames = 0
+    let cameraActiveUntil = 0
+    let shadowAspect = -1, lightX = '', lightY = ''
     cleanups.push(() => cancelAnimationFrame(frame))
     function render(now: number) {
       frame = requestAnimationFrame(render)
       if (document.hidden || !visible || failed) { pacer.reset(); return }
-      const dt = pacer.step(now, host.clientWidth < 760 ? 30 : 60, needsRender)
+      const pan = currentJourneyProgress(scrollY)
+      scrollJourney.progress = pan
+      if (pan !== lastPan) cameraActiveUntil = now + 150
+      // Match scrolling at 60 fps; retain the quieter 30 fps budget when idle.
+      const dt = pacer.step(now, compactView.matches && now > cameraActiveUntil ? 30 : 60, needsRender)
       if (dt === null) return
       resize()
       const { phase, moving } = atmosphere
-      const pan = scrollJourney.progress
       // Cloud drift and ripples are intentional environmental motion; Pause still freezes both.
       const frozen = settings.current.paused
       if (frozen && phase === lastPhase && pan === lastPan && trailStrength < .002 && !needsRender) return
@@ -435,9 +452,13 @@ export async function createValleyScene(host: HTMLDivElement, settings: { curren
       camera.position.copy(observer); camera.position.x += eyeDrift.x; camera.position.y += eyeDrift.y
       camera.lookAt(look.x + pointer.x * 1.1 * drift, look.y - pointer.y * 0.6 * drift, look.z)
       camera.updateMatrixWorld()
+      viewFrustum.setFromProjectionMatrix(viewProjection.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse))
+      // A flat lake's bounding sphere extends far above the actual water. Use its
+      // tight box so the second scene render stops as soon as the lake leaves view.
+      lake.visible = viewFrustum.intersectsBox(lakeBounds)
       aircraft.update(dt, pan, frozen && !moving, night, twilight, camera, renderer.getPixelRatio())
       birds.update(dt, frozen && !moving, camera)
-      camp.update(elapsed, night, camera, host.clientHeight, renderer.getPixelRatio())
+      camp.update(elapsed, night, camera, renderedHeight, renderedRatio)
       host.dataset.cabinLights = night > .2 ? 'on' : 'off'
       // Once it is outside the frustum, omit terrain and the lake's reflection pass entirely.
       world.visible = pan < .995
@@ -478,8 +499,10 @@ export async function createValleyScene(host: HTMLDivElement, settings: { curren
       waterMaterial.uniforms.lightColor.value.copy(sunLight.color).lerp(moonLight.color, night)
       waterMaterial.uniforms.eye.value.copy(camera.position)
       projected.copy(source).multiplyScalar(400).add(camera.position).project(camera)
-      document.documentElement.style.setProperty('--light-x', `${(projected.x * 0.5 + 0.5) * 100}%`)
-      document.documentElement.style.setProperty('--light-y', `${(0.5 - projected.y * 0.5) * 100}%`)
+      const nextLightX = `${THREE.MathUtils.clamp((projected.x * .5 + .5) * 100, 0, 100).toFixed(2)}%`
+      const nextLightY = `${THREE.MathUtils.clamp((.5 - projected.y * .5) * 100, 0, 100).toFixed(2)}%`
+      if (nextLightX !== lightX) { lightX = nextLightX; document.documentElement.style.setProperty('--light-x', lightX) }
+      if (nextLightY !== lightY) { lightY = nextLightY; document.documentElement.style.setProperty('--light-y', lightY) }
       renderer.toneMappingExposure = mix(1.0, 0.93, night)
       host.dataset.skyPhase = String(phase)
       host.dataset.night = String(night)
@@ -491,7 +514,8 @@ export async function createValleyScene(host: HTMLDivElement, settings: { curren
       host.dataset.cameraPitch = (view.pitch * 180 / Math.PI).toFixed(2)
       host.dataset.groundVisible = String(world.visible)
       host.dataset.lightBelow = String(projected.y < -1)
-      renderer.shadowMap.needsUpdate = phase !== lastPhase || needsRender
+      renderer.shadowMap.needsUpdate = phase !== lastPhase || aspect !== shadowAspect
+      shadowAspect = aspect
       try {
         metrics?.begin(now)
         composer.render()

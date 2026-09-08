@@ -4,6 +4,10 @@
   main { position: relative; z-index: 1; }
   .scene-backdrop { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; background: linear-gradient(180deg, rgb(var(--page)), rgb(var(--panel))); }
   .scene-backdrop .valley { position: absolute; inset: 0; height: 100%; }
+  @media (hover: none) and (pointer: coarse) {
+    /* Safari's moving toolbar must not resize GPU buffers or change the lens mid-swipe. */
+    .scene-backdrop { bottom: auto; height: 100lvh; }
+  }
   .hero { height: 220svh; min-height: 0; overflow: visible; isolation: auto; background: transparent; }
   .hero::after { display: none; }
   .hero-stage { position: sticky; top: 0; height: 100svh; width: 100%; overflow: hidden; }

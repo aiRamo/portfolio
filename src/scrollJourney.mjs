@@ -1,6 +1,11 @@
 import { clamp, mix, smooth, observerCamera } from './environment.mjs'
 
-export const scrollJourney = { progress: 0, override: /** @type {number | null} */ (null) }
+export const scrollJourney = { progress: 0, distance: 1, override: /** @type {number | null} */ (null) }
+
+/** Sample native scroll at draw time, without waiting for the DOM's separate RAF. */
+export function currentJourneyProgress(scroll, state = scrollJourney) {
+  return state.override === null ? clamp(scroll / Math.max(1, state.distance)) : clamp(state.override)
+}
 
 /** Native scroll supplies the timeline. Reversing scroll retraces exactly the same camera path. */
 export function journeyAt(scroll, distance) {

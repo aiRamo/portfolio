@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { Frustum, Matrix4, PerspectiveCamera, Vector3 } from 'three'
-import { journeyAt, skyCameraAt, contentPullAt } from '../src/scrollJourney.mjs'
+import { journeyAt, skyCameraAt, contentPullAt, currentJourneyProgress } from '../src/scrollJourney.mjs'
 import { observerCamera, celestialAt, terrainHeight, mountainHeight } from '../src/environment.mjs'
 import { landscapeGeometry } from '../src/landscape.mjs'
 import { cliffMassGeometry, CLIFF_MASSES } from '../src/cliffs.mjs'
@@ -14,6 +14,15 @@ function cameraAt(aspect, progress) {
   camera.updateMatrixWorld()
   return camera
 }
+
+test('the camera reads current native scroll even before the DOM scroll frame runs', () => {
+  const stale = { progress: .1, distance: 1200, override: null }
+  assert.equal(currentJourneyProgress(600, stale), .5)
+  assert.equal(currentJourneyProgress(120, stale), .1, 'reverse scrolling has no queued camera movement')
+  assert.equal(currentJourneyProgress(-80, stale), 0, 'Safari rubber-banding cannot tilt below the overlook')
+  assert.equal(currentJourneyProgress(2000, stale), 1)
+  assert.equal(currentJourneyProgress(600, { ...stale, override: .75 }), .75, 'return-to-mountains keeps its explicit camera path')
+})
 
 test('portrait framing enlarges the camp while retaining the fire and central mountain ridge', () => {
   for (const aspect of [320 / 700, 390 / 844, 430 / 932, 375 / 667]) {
