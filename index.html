@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#f1f2e9" />
+    <meta name="theme-color" content="#a0c7e1" />
     <meta name="description" content="Adrian Ramos is a software engineer connecting thoughtful mobile experiences, physical devices, and the systems behind them. Explore selected projects and engineering work." />
     <meta property="og:title" content="Adrian Ramos | Built with curiosity" />
     <meta property="og:description" content="Software for the world beyond the screen. Mobile, connected devices, and developer platforms." />
@@ -16,6 +16,9 @@
       const mode = ['light', 'dark', 'sunset'].includes(saved) ? saved : matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
       document.documentElement.dataset.theme = mode;
       document.documentElement.style.colorScheme = mode === 'light' ? 'light' : 'dark';
+      const browserColors = { light: '#a0c7e1', dark: '#091223', sunset: '#84478f' };
+      document.documentElement.style.setProperty('--browser-chrome', browserColors[mode]);
+      document.querySelector('meta[name="theme-color"]').setAttribute('content', browserColors[mode]);
     </script>
   </head>
   <body>

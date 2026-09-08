@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { atmosphere, lightingAt, mix, phaseForMode, HALF_DAY_MS, nextPhase, makeSkyTimeline } from './environment.mjs'
+import { applyBrowserChrome } from './browserChrome.mjs'
 
 export type SceneMode = 'light' | 'dark' | 'sunset'
 
@@ -29,10 +30,6 @@ function paint(phase: number) {
   root.style.setProperty('--twilight', String(twilight))
   root.dataset.skyPhase = String(phase)
   root.dataset.skyStage = twilight > .7 ? Math.cos(phase) < 0 ? 'sunset' : 'sunrise' : night > .95 ? 'night' : night < .05 ? 'day' : 'blue-hour'
-  const page = palette.page
-  const themeColor = page[0].map((v, i) => Math.round(mix(mix(v, page[1][i], night), page[2][i], twilight * 0.8)))
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', `rgb(${themeColor.join(',')})`)
-  root.style.colorScheme = night > 0.5 ? 'dark' : 'light'
 }
 
 export function useAtmosphere() {
@@ -56,6 +53,7 @@ export function useAtmosphere() {
   useEffect(() => {
     cancelAnimationFrame(frame.current)
     const root = document.documentElement
+    applyBrowserChrome(mode)
     try { localStorage.setItem('adrian-theme', mode) } catch { /* Storage is optional. */ }
     const from = atmosphere.phase
     const to = ready.current ? nextPhase(from, mode) : phaseForMode(mode)

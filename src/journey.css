@@ -1,8 +1,11 @@
 @layer journey {
   :root { --pan-progress: 0; --sky-reveal: 0; --hero-visibility: 1; }
-  body { background: transparent; }
+  html, body { background-color: var(--browser-chrome, #a0c7e1); }
   main { position: relative; z-index: 1; }
-  .scene-backdrop { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; background: linear-gradient(180deg, rgb(var(--page)), rgb(var(--panel))); }
+  .scene-backdrop { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; background: var(--browser-chrome, #a0c7e1); }
+  /* Safari extends solid colors from viewport-attached elements into its toolbar.
+     A matching edge supplies that color without an opaque header over the sky. */
+  .browser-chrome-edge { position: fixed; top: 0; left: 0; right: 0; height: 1px; z-index: 31; background-color: var(--browser-chrome, #a0c7e1); pointer-events: none; }
   .scene-backdrop .valley { position: absolute; inset: 0; height: 100%; }
   @media (hover: none) and (pointer: coarse) {
     /* Safari's moving toolbar must not resize GPU buffers or change the lens mid-swipe. */
@@ -67,7 +70,7 @@
     .hero-copy { translate: none; }
   }
   @media print {
-    .scene-backdrop, .scene-shade, .sky-pause { display: none; }
+    .scene-backdrop, .scene-shade, .browser-chrome-edge, .sky-pause { display: none; }
     .sky-content { padding: 0; }
     .sky-content .reveal { translate: none; opacity: 1; }
   }

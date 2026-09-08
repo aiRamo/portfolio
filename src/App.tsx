@@ -33,6 +33,7 @@ export default function App() {
   return <>
     {loading && <SceneLoader progress={sceneProgress} ready={sceneReady} reduced={reduced} onComplete={enter} />}
     <div className="scene-backdrop" aria-hidden={loading || undefined}><SceneBoundary onError={ready}><Suspense fallback={null}><Valley paused={paused} reduced={reduced} onProgress={setSceneProgress} onReady={ready} /></Suspense></SceneBoundary></div>
+    <div className="browser-chrome-edge" aria-hidden="true" />
     <div className="portfolio-content" data-reveal={loading ? 'loading' : contentVisible ? 'content' : 'scene'} inert={!contentVisible} aria-hidden={!contentVisible || undefined}>
     <a className="skip-link" href="#work">Skip to selected work</a>
     <div className="reading-progress" ref={progress} aria-hidden="true" />
