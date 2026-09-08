@@ -36,14 +36,15 @@ export default function App() {
     <div className="portfolio-content" data-reveal={loading ? 'loading' : contentVisible ? 'content' : 'scene'} inert={!contentVisible} aria-hidden={!contentVisible || undefined}>
     <a className="skip-link" href="#work">Skip to selected work</a>
     <div className="reading-progress" ref={progress} aria-hidden="true" />
+    <div className="scene-shade" aria-hidden="true" />
     <div className="light-wash" aria-hidden="true" />
     <header className="site-header"><SectionNavigation active={active} /><button className="theme-toggle" onClick={toggle} aria-label={`Switch to ${dark ? 'day' : 'night'} mode`} aria-pressed={dark} title={`Bring on the ${dark ? 'sunrise' : 'moonlight'}`}><Sun size={16} /><span className="toggle-track"><span className="toggle-thumb" /></span><Moon size={15} /></button></header>
 
     <main>
       <section className="hero" id="home" data-section data-slide="The overlook">
         <div className="hero-stage">
-        <div className="hero-copy"><div className="eyebrow hero-eyebrow"><span className="status-dot" /> SOFTWARE ENGINEER · PRODUCT BUILDER</div><h1>Built with<br /><em>curiosity.</em></h1><p>I’m Adrian. I connect thoughtful software<br className="desktop-break" /> to the world beyond the screen.</p><a className="primary-link" href="#work">Explore my work <span><ArrowDown size={18} /></span></a><div className="hero-footnote"><span /> A little perspective changes everything.</div></div>
-        <div className="hero-bottom"><div className="scene-state"><span className="status-dot" /><span aria-live="polite">{transitioning ? dark ? 'Chasing the last light' : 'Here comes the sun' : dark ? 'A moment in the moonlight' : 'Somewhere in the daylight'}</span></div><div className="scene-controls"><span>{dark ? 'NIGHTFALL' : 'DAYLIGHT'} <span className="scene-separator">/</span> {paused ? 'STILL SCENE' : 'LIVE SCENE'}</span><button onClick={() => setPaused(!paused)} aria-label={paused ? 'Resume landscape animation' : 'Pause landscape animation'} aria-pressed={paused}>{paused ? <Play size={13} /> : <Pause size={13} />}</button></div><a href="#intro" className="scroll-cue">NEXT CHAPTER <ArrowDown size={14} /></a></div>
+        <div className="hero-copy"><div className="eyebrow hero-eyebrow"><span className="status-dot" /> SOFTWARE ENGINEER · PRODUCT BUILDER</div><h1>Built with<br /><em>curiosity.</em></h1><p>I’m Adrian. I connect thoughtful software<br className="desktop-break" /> to the world beyond the screen.</p><a className="primary-link" href="#intro">Next chapter <span><ArrowDown size={18} /></span></a><div className="hero-footnote"><span /> A little perspective changes everything.</div></div>
+        <div className="hero-bottom"><div className="scene-state"><span className="status-dot" /><span aria-live="polite">{transitioning ? dark ? 'Chasing the last light' : 'Here comes the sun' : dark ? 'A moment in the moonlight' : 'Somewhere in the daylight'}</span></div><div className="scene-controls"><span>{dark ? 'NIGHTFALL' : 'DAYLIGHT'} <span className="scene-separator">/</span> {paused ? 'STILL SCENE' : 'LIVE SCENE'}</span><button onClick={() => setPaused(!paused)} aria-label={paused ? 'Resume landscape animation' : 'Pause landscape animation'} aria-pressed={paused}>{paused ? <Play size={13} /> : <Pause size={13} />}</button></div></div>
         </div>
       </section>
 

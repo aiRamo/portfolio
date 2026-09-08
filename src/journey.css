@@ -6,12 +6,14 @@
   .scene-backdrop .valley { position: absolute; inset: 0; height: 100%; }
   @media (hover: none) and (pointer: coarse) {
     /* Safari's moving toolbar must not resize GPU buffers or change the lens mid-swipe. */
-    .scene-backdrop { bottom: auto; height: 100lvh; }
+    .scene-backdrop, .scene-shade { bottom: auto; height: 100lvh; }
   }
   .hero { height: 220svh; min-height: 0; overflow: visible; isolation: auto; background: transparent; }
   .hero::after { display: none; }
   .hero-stage { position: sticky; top: 0; height: 100svh; width: 100%; overflow: hidden; }
-  .hero-stage::after { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: var(--hero-visibility); background: linear-gradient(90deg, #07191450, transparent 58%), linear-gradient(0deg, #061710c2, transparent 37%), linear-gradient(180deg, #0b1f2526, transparent 20%); }
+  /* Keep the readability gradient on the same viewport as the landscape, outside
+     the shorter sticky hero panel, so Safari's expanded viewport exposes no edge. */
+  .scene-shade { position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: var(--hero-visibility); background: linear-gradient(90deg, #07191450, transparent 58%), linear-gradient(0deg, #061710c2, transparent 37%), linear-gradient(180deg, #0b1f2526, transparent 20%); }
   .hero-copy, .hero-bottom { opacity: var(--hero-visibility); translate: 0 calc(var(--pan-progress) * -90px); }
   :root[data-hero-visible='false'] .hero-stage { visibility: hidden; }
   .valley-fallback { opacity: var(--hero-visibility); }
@@ -41,7 +43,7 @@
 
   @media (max-width: 760px) {
     html { scroll-padding-top: 100px; }
-    .hero-stage::after { background: linear-gradient(0deg, #05150ede, #081b1733 53%, transparent 75%), linear-gradient(180deg, #10283750, transparent 23%); }
+    .scene-shade { background: linear-gradient(0deg, #05150ede, #081b1733 53%, transparent 75%), linear-gradient(180deg, #10283750, transparent 23%); }
     .intro { min-height: 76svh; padding-block: 80px 95px; }
     .intro h2 { font-size: clamp(37px, 8vw, 48px); }
     .sky-content .section-shell { width: calc(100% - 44px); }
@@ -67,7 +69,7 @@
     .hero-copy, .hero-bottom { translate: none; }
   }
   @media print {
-    .scene-backdrop, .sky-pause { display: none; }
+    .scene-backdrop, .scene-shade, .sky-pause { display: none; }
     .sky-content { padding: 0; }
     .sky-content .reveal { translate: none; opacity: 1; }
   }
