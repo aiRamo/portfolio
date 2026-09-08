@@ -415,7 +415,7 @@ export async function createValleyScene(host: HTMLDivElement, settings: { curren
       renderer.domElement.removeEventListener('webglcontextlost', onLost)
     })
     const sunDirection = new THREE.Vector3(), moonDirection = new THREE.Vector3(), projected = new THREE.Vector3()
-    const dayFog = new THREE.Color('#a3b4bc'), duskFog = new THREE.Color('#dd8b70'), nightFog = new THREE.Color('#31475d')
+    const dayFog = new THREE.Color('#a3b4bc'), duskFog = new THREE.Color('#b082bb'), nightFog = new THREE.Color('#31475d')
     const daySun = new THREE.Color('#ffd28b'), sunsetSun = new THREE.Color('#ff713b')
     const dayAmbient = new THREE.Color('#dce8ed'), nightAmbient = new THREE.Color('#91aed5')
     const pacer = createFramePacer(), metrics = sceneMetrics(renderer, host)

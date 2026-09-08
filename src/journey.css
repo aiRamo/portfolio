@@ -19,9 +19,7 @@
   .valley-fallback { opacity: var(--hero-visibility); }
 
   .site-header { position: fixed; color: color-mix(in srgb, rgb(var(--hero-ink)), rgb(var(--ink)) calc(var(--sky-reveal) * 100%)); text-shadow: 0 1px 16px rgb(var(--page) / .15); background: linear-gradient(180deg, rgb(var(--page) / calc(var(--sky-reveal) * .86)), transparent); }
-  .site-header .theme-toggle { border-color: currentColor; background: rgb(var(--panel) / .12); }
-  .site-header .toggle-track { background: currentColor; }
-  .site-header .toggle-thumb { background: rgb(var(--panel)); }
+  .site-header .theme-picker { border-color: currentColor; background: rgb(var(--panel) / .12); }
   .site-header :focus-visible { outline-color: currentColor; }
   .light-wash { background: radial-gradient(ellipse at var(--light-x) var(--light-y), #ffd19755, transparent 75%); }
 

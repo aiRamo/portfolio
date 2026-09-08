@@ -13,9 +13,9 @@
     <script>
       let saved;
       try { saved = localStorage.getItem('adrian-theme'); } catch (_) {}
-      const night = saved === 'dark' || (saved !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
-      document.documentElement.dataset.theme = night ? 'dark' : 'light';
-      document.documentElement.style.colorScheme = night ? 'dark' : 'light';
+      const mode = ['light', 'dark', 'sunset'].includes(saved) ? saved : matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      document.documentElement.dataset.theme = mode;
+      document.documentElement.style.colorScheme = mode === 'light' ? 'light' : 'dark';
     </script>
   </head>
   <body>

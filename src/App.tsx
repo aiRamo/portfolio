@@ -1,6 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
-import { ArrowDown, ArrowUpRight, ArrowUp, Sun, Moon, Pause, Play, Github, Linkedin, Mail, Mountain, Workflow, Sparkles, BookOpen } from 'lucide-react'
-import { useAtmosphere } from './useAtmosphere'
+import { ArrowDown, ArrowUpRight, ArrowUp, Sun, Moon, Sunset, ChevronDown, Pause, Play, Github, Linkedin, Mail, Mountain, Workflow, Sparkles, BookOpen } from 'lucide-react'
+import { useAtmosphere, type SceneMode } from './useAtmosphere'
 import { useScrollJourney } from './useScrollJourney'
 import { profile, fieldNotes } from './content'
 import { SceneLoader, SceneBoundary } from './SceneLoader'
@@ -12,7 +12,7 @@ import { Skills } from './Skills'
 const Valley = lazy(() => import('./Valley'))
 
 export default function App() {
-  const { dark, toggle, reduced, paused, setPaused } = useAtmosphere()
+  const { mode, setMode, reduced, paused, setPaused } = useAtmosphere()
   const [active, setActive] = useState('home')
   const [sceneProgress, setSceneProgress] = useState(3)
   const [sceneReady, setSceneReady] = useState(false)
@@ -38,7 +38,15 @@ export default function App() {
     <div className="reading-progress" ref={progress} aria-hidden="true" />
     <div className="scene-shade" aria-hidden="true" />
     <div className="light-wash" aria-hidden="true" />
-    <header className="site-header"><SectionNavigation active={active} /><button className="theme-toggle" onClick={toggle} aria-label={`Switch to ${dark ? 'day' : 'night'} mode`} aria-pressed={dark} title={`Bring on the ${dark ? 'sunrise' : 'moonlight'}`}><Sun size={16} /><span className="toggle-track"><span className="toggle-thumb" /></span><Moon size={15} /></button></header>
+    <header className="site-header"><SectionNavigation active={active} />
+      <div className="theme-picker">
+        {mode === 'sunset' ? <Sunset className="theme-icon" size={16} aria-hidden="true" /> : mode === 'dark' ? <Moon className="theme-icon" size={16} aria-hidden="true" /> : <Sun className="theme-icon" size={16} aria-hidden="true" />}
+        <select aria-label="Scene lighting" value={mode} onChange={event => setMode(event.target.value as SceneMode)}>
+          <option value="light">Light</option><option value="dark">Dark</option><option value="sunset">Sunset</option>
+        </select>
+        <ChevronDown className="theme-chevron" size={14} aria-hidden="true" />
+      </div>
+    </header>
 
     <main>
       <section className="hero" id="home" data-section data-slide="The overlook">

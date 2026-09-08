@@ -37,6 +37,10 @@ export function makeSkyMaterial() {
         vec3 dark=mix(vec3(.027,.044,.073),vec3(.003,.008,.023),height);
         vec3 color=mix(day,dark,night);
         vec3 dusk=mix(vec3(1.1,.24,.065),vec3(.145,.10,.25),height);
+        float evening=smoothstep(-.02,.02,sun.x);
+        vec3 purpleDusk=mix(vec3(1.05,.20,.075),vec3(.43,.055,.64),smoothstep(-.025,.14,rd.y));
+        purpleDusk=mix(purpleDusk,vec3(.095,.022,.29),smoothstep(.14,.85,rd.y));
+        dusk=mix(dusk,purpleDusk,evening);
         color=mix(color,dusk,twilight*.96);
         float sunDot=max(0.,dot(rd,sun));
         float moonDot=max(0.,dot(rd,moon));
@@ -89,7 +93,8 @@ export function makeSkyMaterial() {
         vec3 upperCloud=mix(vec3(.83,.90,1.),vec3(.055,.085,.15),night);
         cloudColor=mix(cloudColor,upperCloud,ascent);
         cloud*=mix(1.,.50,ascent);
-        cloudColor=mix(cloudColor,vec3(.72,.21,.13),twilight*.8);
+        vec3 duskCloud=mix(vec3(.72,.21,.13),mix(vec3(.84,.19,.32),vec3(.39,.12,.58),smoothstep(.04,.45,rd.y)),evening);
+        cloudColor=mix(cloudColor,duskCloud,twilight*.9);
         cloudColor+=edge*vec3(.70,.36,.09)*(1.-night)*(.5+pow(sunDot,8.));
         // Broad underside illumination from the sun/moon now below the camera's field of view.
         cloudColor+=edge*ascent*mix(vec3(.16,.18,.20),vec3(.07,.12,.22),night);

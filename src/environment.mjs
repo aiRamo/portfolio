@@ -2,12 +2,18 @@ import { clamp, mix, smooth, noise } from './terrainMath.mjs'
 import { alpineHeightAt, alpineSnowAt } from './alpine.mjs'
 export { clamp, mix, smooth, noise }
 export const DAY_PHASE = Math.PI * 0.66
+export const SUNSET_PHASE = Math.PI + .065
 export const HALF_DAY_MS = 5000
 export const atmosphere = { phase: DAY_PHASE, night: 0, twilight: 0, moving: false }
 
 /** Advance the sky toward the next selected time, including interrupted transitions. */
-export function nextPhase(from, dark) {
-  const base = DAY_PHASE + (dark ? Math.PI : 0)
+export function phaseForMode(mode) {
+  return mode === 'sunset' ? SUNSET_PHASE : DAY_PHASE + (mode === 'dark' ? Math.PI : 0)
+}
+
+export function nextPhase(from, mode) {
+  // Booleans remain accepted by existing day/night callers.
+  const base = phaseForMode(typeof mode === 'boolean' ? mode ? 'dark' : 'light' : mode)
   return base + Math.ceil((from - base - 1e-8) / (Math.PI * 2)) * Math.PI * 2
 }
 

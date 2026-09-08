@@ -1,15 +1,17 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { atmosphere, lightingAt, mix, DAY_PHASE, HALF_DAY_MS, nextPhase, makeSkyTimeline } from './environment.mjs'
+import { useEffect, useRef, useState } from 'react'
+import { atmosphere, lightingAt, mix, phaseForMode, HALF_DAY_MS, nextPhase, makeSkyTimeline } from './environment.mjs'
+
+export type SceneMode = 'light' | 'dark' | 'sunset'
 
 type RGB = [number, number, number]
 const palette: Record<string, [RGB, RGB, RGB]> = {
-  page: [[160, 199, 225], [9, 18, 35], [117, 83, 110]],
-  ink: [[18, 43, 63], [224, 237, 253], [255, 229, 218]],
-  muted: [[36, 66, 86], [175, 196, 219], [241, 211, 201]],
-  panel: [[212, 231, 241], [23, 39, 61], [88, 67, 93]],
+  page: [[160, 199, 225], [9, 18, 35], [102, 68, 140]],
+  ink: [[18, 43, 63], [224, 237, 253], [255, 236, 251]],
+  muted: [[36, 66, 86], [175, 196, 219], [231, 215, 243]],
+  panel: [[212, 231, 241], [23, 39, 61], [60, 40, 89]],
   accent: [[26, 65, 86], [206, 225, 245], [255, 214, 165]],
   line: [[113, 155, 179], [65, 87, 115], [173, 127, 129]],
-  'hero-ink': [[255, 244, 200], [210, 229, 253], [255, 198, 119]],
+  'hero-ink': [[255, 244, 200], [210, 229, 253], [255, 224, 245]],
   'art-warmth': [[255, 218, 129], [99, 144, 192], [241, 121, 74]],
 }
 
@@ -34,7 +36,10 @@ function paint(phase: number) {
 }
 
 export function useAtmosphere() {
-  const [dark, setDark] = useState(() => document.documentElement.dataset.theme === 'dark')
+  const [mode, setMode] = useState<SceneMode>(() => {
+    const saved = document.documentElement.dataset.theme
+    return saved === 'sunset' || saved === 'dark' ? saved : 'light'
+  })
   const [transitioning, setTransitioning] = useState(false)
   const [reduced, setReduced] = useState(() => matchMedia('(prefers-reduced-motion: reduce)').matches)
   const [paused, setPaused] = useState(false)
@@ -51,12 +56,12 @@ export function useAtmosphere() {
   useEffect(() => {
     cancelAnimationFrame(frame.current)
     const root = document.documentElement
-    try { localStorage.setItem('adrian-theme', dark ? 'dark' : 'light') } catch { /* Storage is optional. */ }
+    try { localStorage.setItem('adrian-theme', mode) } catch { /* Storage is optional. */ }
     const from = atmosphere.phase
-    const to = ready.current ? nextPhase(from, dark) : DAY_PHASE + (dark ? Math.PI : 0)
+    const to = ready.current ? nextPhase(from, mode) : phaseForMode(mode)
     if (!ready.current || Math.abs(from - to) < 1e-7) {
       paint(to)
-      root.dataset.theme = dark ? 'dark' : 'light'
+      root.dataset.theme = mode
       root.dataset.transitioning = 'false'
       ready.current = true
       atmosphere.moving = false
@@ -76,14 +81,13 @@ export function useAtmosphere() {
       else {
         setTransitioning(false)
         atmosphere.moving = false
-        root.dataset.theme = dark ? 'dark' : 'light'
+        root.dataset.theme = mode
         root.dataset.transitioning = 'false'
       }
     }
     frame.current = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(frame.current)
-  }, [dark])
+  }, [mode])
 
-  const toggle = useCallback(() => setDark(value => !value), [])
-  return { dark, toggle, transitioning, reduced, paused, setPaused }
+  return { mode, setMode, transitioning, reduced, paused, setPaused }
 }

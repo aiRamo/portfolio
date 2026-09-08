@@ -11,9 +11,7 @@
   .hero::after { content: ''; position: absolute; z-index: 1; inset: 0; pointer-events: none; background: linear-gradient(90deg, #07191450, transparent 58%), linear-gradient(0deg, #061710c2, transparent 37%), linear-gradient(180deg, #0b1f2526, transparent 20%); }
   .site-header { color: rgb(var(--hero-ink)); text-shadow: 0 1px 16px #071c2877; background: linear-gradient(180deg, #08253366, transparent); }
   .site-header .wordmark-dot { color: inherit; }
-  .site-header .theme-toggle { border-color: rgb(var(--hero-ink) / .3); background: #102a2938; backdrop-filter: blur(12px); }
-  .site-header .toggle-track { background: rgb(var(--hero-ink) / .25); }
-  .site-header .toggle-thumb { background: rgb(var(--hero-ink)); transform: translateX(calc(var(--night) * 14px)); }
+  .site-header .theme-picker { border-color: rgb(var(--hero-ink) / .3); background: #102a2938; backdrop-filter: blur(12px); }
   .hero-copy { position: absolute; z-index: 3; left: 5%; bottom: 20%; width: min(590px, 50%); color: rgb(var(--hero-ink)); pointer-events: none; }
   .hero-copy a, .hero-copy button { pointer-events: auto; }
   .hero-eyebrow { font-size: .75rem; letter-spacing: .11em; line-height: 1.7; margin-bottom: 23px; text-shadow: 0 1px 12px #071b1bd9; }

@@ -37,6 +37,16 @@
 }
 
 @layer components {
+  .theme-picker { position: relative; margin-left: auto; flex-shrink: 0; border: 1px solid rgb(var(--line)); border-radius: 50px; }
+  .theme-picker select { display: block; appearance: none; -webkit-appearance: none; border: 0; border-radius: inherit; background: transparent; color: inherit; font: inherit; font-size: 16px; line-height: 1.2; min-height: 44px; padding: 10px 29px 10px 36px; cursor: pointer; }
+  .theme-picker option { color: CanvasText; background: Canvas; }
+  .theme-picker > svg { position: absolute; top: 50%; transform: translateY(-50%); pointer-events: none; }
+  .theme-icon { left: 12px; }
+  .theme-chevron { right: 10px; }
+  @media (max-width: 370px) {
+    .theme-picker .theme-icon { display: none; }
+    .theme-picker select { padding-left: 11px; padding-right: 25px; }
+  }
   .skip-link { position: fixed; top: -100px; left: 20px; z-index: 100; padding: 15px 22px; background: rgb(var(--ink)); color: rgb(var(--page)); }
   .skip-link:focus { top: 15px; }
   .reading-progress { position: fixed; top: 0; left: 0; height: 2px; width: 100%; background: rgb(var(--accent)); transform-origin: left; transform: scaleX(0); z-index: 60; }
@@ -56,9 +66,6 @@
   .navigation-index { color: rgb(var(--muted)); font-size: 10px; letter-spacing: .06em; font-variant-numeric: tabular-nums; }
   .section-navigation a > svg { opacity: .55; }
   @keyframes navigation-enter { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
-  .theme-toggle { display: flex; align-items: center; gap: 9px; margin-left: auto; flex-shrink: 0; border: 1px solid rgb(var(--line)); padding: 10px 12px; border-radius: 50px; min-height: 44px; }
-  .toggle-track { height: 15px; width: 29px; background: rgb(var(--ink) / .12); display: block; border-radius: 20px; padding: 3px; }
-  .toggle-thumb { display: block; width: 9px; height: 9px; border-radius: 50%; background: rgb(var(--ink)); transform: translateX(calc(var(--night) * 14px)); }
   .section-heading h2, .about-heading h2, .contact h2 { background: linear-gradient(110deg, rgb(var(--ink)) 5%, color-mix(in srgb, rgb(var(--ink)), #e2a463 calc(var(--twilight) * 56%)) var(--light-x), rgb(var(--ink)) 100%); background-clip: text; -webkit-background-clip: text; color: transparent; }
   .contact h2 > a { color: rgb(var(--ink)); }
   .intro { display: grid; grid-template-columns: 1fr 2fr .6fr; padding-block: 123px; align-items: start; gap: 30px; }
@@ -254,7 +261,6 @@
     .site-header { padding: 22px; gap: 16px; }
     .wordmark { font-size: 19px; }
     .brand-icon { margin-right: 0; }
-    .theme-toggle { margin-left: auto; padding: 8px 10px; gap: 7px; }
     .intro { grid-template-columns: 1fr; padding-block: 75px; gap: 28px; }
     .section-kicker { font-size: 8px; }
     .intro h2 { font-size: 38px; }
@@ -344,7 +350,6 @@
     .brand-trigger { gap: 6px; }
     .brand-trigger .brand-icon svg { width: 18px; height: 18px; }
     .navigation-chevron { width: 12px; margin-left: 0; }
-    .theme-toggle { gap: 5px; padding-inline: 8px; }
     .project-art { height: 435px; }
     .phone { transform: rotate(-7deg) scale(.8); }
     .stream-art:hover .phone { transform: rotate(-2deg) scale(.8); }

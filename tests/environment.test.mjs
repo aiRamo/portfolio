@@ -3,8 +3,27 @@ import assert from 'node:assert/strict'
 import { PerspectiveCamera, Vector3 } from 'three'
 import { DAY_PHASE, HALF_DAY_MS, nextPhase, lightingAt, celestialAt, skyRotationAt, cloudTimeAt, terrainHeight, mountainHeight, jaggedRidgeHeight, snowCoverageAt, observerCamera, TARN, seededRandom, makeSkyTimeline, easeSkyProgress } from '../src/environment.mjs'
 import { mountainEnvelopeAt } from '../src/alpine.mjs'
+import { SUNSET_PHASE, phaseForMode } from '../src/environment.mjs'
 
 const close = (a, b, epsilon = 1e-7) => assert.ok(Math.abs(a - b) < epsilon, `${a} differs from ${b}`)
+
+test('all three scene choices reach their saved time, including interrupted selections', () => {
+  const modes = ['light', 'dark', 'sunset']
+  const sunset = lightingAt(SUNSET_PHASE)
+  assert.ok(sunset.twilight > .9 && sunset.night > .5 && sunset.night < .9, 'sunset stays in illuminated purple twilight')
+  assert.ok(Math.cos(SUNSET_PHASE) < 0 && Math.sin(SUNSET_PHASE) < 0, 'sunset is just after the evening horizon crossing')
+  for (const mode of modes) {
+    const base = phaseForMode(mode)
+    close(nextPhase(base, mode), base)
+    for (const from of modes.map(phaseForMode).concat([DAY_PHASE + .3, SUNSET_PHASE + .1, 30])) {
+      const target = nextPhase(from, mode)
+      assert.ok(target >= from - 1e-8 && target < from + Math.PI * 2, 'selections move forward at most one cycle')
+      close(Math.sin(target), Math.sin(base))
+      close(Math.cos(target), Math.cos(base))
+      close(makeSkyTimeline(from, target)(1), target)
+    }
+  }
+})
 
 test('day, sunset, midnight and sunrise derive from the sun crossing the horizon', () => {
   assert.equal(lightingAt(DAY_PHASE).night, 0)
