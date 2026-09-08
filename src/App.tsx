@@ -26,7 +26,7 @@ export default function App() {
   useEffect(() => {
     if (loading) return
     // Let the unobstructed landscape register before bringing in the interface.
-    const reveal = setTimeout(() => setContentVisible(true), reduced ? 100 : 180)
+    const reveal = setTimeout(() => setContentVisible(true), reduced ? 1600 : 1680)
     return () => clearTimeout(reveal)
   }, [loading, reduced])
 

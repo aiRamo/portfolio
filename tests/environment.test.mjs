@@ -106,12 +106,13 @@ test('clouds and stars share the sunset curve and coast back to ambient speed', 
   }
 })
 
-test('observer stands at eye height above a continuous ledge, with a slight downward view', () => {
+test('observer stays on the ledge with a gentle downward view, including the portrait camp framing', () => {
   for (const aspect of [16 / 9, 4 / 3, 390 / 844, 320 / 700]) {
     const view = observerCamera(aspect)
     close(view.position[1] - terrainHeight(view.position[0], view.position[2]), 1.8)
     assert.ok(view.position[1] > view.target[1])
-    assert.ok((view.position[1] - view.target[1]) / (view.position[2] - view.target[2]) < .06)
+    const pitch = Math.atan2(view.position[1] - view.target[1], view.position[2] - view.target[2])
+    assert.ok(pitch < (aspect < 1 ? .17 : .06), 'the camera remains an overlook, not a top-down view')
   }
 })
 

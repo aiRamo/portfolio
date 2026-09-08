@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { Frustum, Matrix4, PerspectiveCamera, Vector3 } from 'three'
 import { journeyAt, skyCameraAt, contentPullAt } from '../src/scrollJourney.mjs'
-import { observerCamera, celestialAt } from '../src/environment.mjs'
+import { observerCamera, celestialAt, terrainHeight, mountainHeight } from '../src/environment.mjs'
 import { landscapeGeometry } from '../src/landscape.mjs'
 import { cliffMassGeometry, CLIFF_MASSES } from '../src/cliffs.mjs'
 
@@ -14,6 +14,33 @@ function cameraAt(aspect, progress) {
   camera.updateMatrixWorld()
   return camera
 }
+
+test('portrait framing enlarges the camp while retaining the fire and central mountain ridge', () => {
+  for (const aspect of [320 / 700, 390 / 844, 430 / 932, 375 / 667]) {
+    const camera = cameraAt(aspect, 0)
+    const oldLens = camera.clone()
+    oldLens.fov = 62
+    oldLens.updateProjectionMatrix()
+    const base = new Vector3(-1, terrainHeight(-1, -36), -36)
+    const roof = base.clone().add(new Vector3(0, 6, 0))
+    const projectedHeight = lens => roof.clone().project(lens).y - base.clone().project(lens).y
+    assert.ok(projectedHeight(camera) > projectedHeight(oldLens) * 1.45, 'camp should be visibly larger')
+    for (const point of [base, roof, new Vector3(1.2, terrainHeight(1.2, -28.7) + 1, -28.7),
+      new Vector3(0, mountainHeight(0, -200), -200)]) {
+      point.project(camera)
+      assert.ok(Math.abs(point.x) < .85 && point.y > .05 && point.y < .9, 'camp and ridge fit in the upper scene')
+    }
+  }
+  for (const aspect of [1, 4 / 3, 16 / 9]) {
+    assert.equal(observerCamera(aspect).fov, 49)
+    assert.deepEqual(observerCamera(aspect).target, [5, 8, -100])
+  }
+  for (let aspect = .4; aspect < 1.1; aspect += .001) {
+    const a = observerCamera(aspect), b = observerCamera(aspect + .001)
+    assert.ok(Math.abs(a.fov - b.fov) < .03 && Math.abs(a.target[1] - b.target[1]) < .1,
+      'resizing smoothly blends the framing')
+  }
+})
 
 test('camera ascent starts at the overlook, is continuous, and retraces on upward scroll', () => {
   const home = observerCamera(1.6), camera = cameraAt(1.6, 0)

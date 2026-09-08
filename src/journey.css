@@ -50,6 +50,14 @@
     .hero-eyebrow { margin-bottom: 10px; }
     .hero-copy > p { margin-top: 14px; }
   }
+  @media (max-width: 760px) and (max-height: 740px) {
+    /* Reserve the upper half for the camp on shorter phones, too. */
+    .hero-copy { bottom: 16%; }
+    .hero h1 { font-size: 54px; }
+    .hero-eyebrow { margin-bottom: 10px; }
+    .hero-copy > p { font-size: .875rem; line-height: 1.55; margin-top: 12px; }
+    .primary-link { margin-top: 4px; padding-block: 8px; }
+  }
   @media (prefers-reduced-motion: reduce) {
     .sky-content .reveal { translate: none; opacity: 1; }
     .hero-copy, .hero-bottom { translate: none; }

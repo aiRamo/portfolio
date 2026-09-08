@@ -46,9 +46,11 @@ export function lightingAt(phase) {
 }
 
 export function celestialAt(phase, aspect = 1.6) {
-  const width = Math.min(1, aspect * (aspect < .8 ? .75 : .63))
+  const portrait = 1 - smooth((aspect - .55) / .45)
+  // Keep the timelapse arc inside the tighter portrait lens, including sunset.
+  const width = Math.min(1, aspect * mix(.63, .33, portrait))
   const x = -Math.cos(phase) * 0.61 * width
-  const y = Math.sin(phase) * 0.42
+  const y = Math.sin(phase) * mix(.42, .24, portrait)
   const length = Math.hypot(x, y, 1.15)
   return { sun: [x / length, y / length, -1.15 / length], moon: [-x / length, -y / length, -1.15 / length] }
 }
@@ -173,10 +175,13 @@ export function snowCoverageAt(x, z, height, normalUp = 1) {
 }
 
 export function observerCamera(aspect) {
+  // A tighter portrait lens brings the far-shore camp and mountain range forward.
+  // Blend into the desktop framing so rotating/resizing never changes the lens abruptly.
+  const portrait = 1 - smooth((aspect - .55) / .45)
   return {
     position: [-6, terrainHeight(-6, 62) + 1.8, 62],
-    target: [5, 8, -100],
-    fov: aspect < 0.8 ? 62 : 49,
+    target: [5, mix(8, -12, portrait), -100],
+    fov: mix(49, 44, portrait),
   }
 }
 
