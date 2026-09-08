@@ -18,7 +18,8 @@
      the shorter sticky hero panel, so Safari's expanded viewport exposes no edge. */
   .scene-shade { position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: var(--hero-visibility); background: linear-gradient(90deg, #07191450, transparent 58%), linear-gradient(0deg, #061710c2, transparent 37%), linear-gradient(180deg, #0b1f2526, transparent 20%); }
   @media (max-width: 760px), (hover: none) and (pointer: coarse) {
-    .scene-shade { display: none; }
+    /* Show the landscape directly, without shading or the sunset light wash. */
+    .scene-shade, .light-wash { display: none; }
   }
   .hero-copy { opacity: var(--hero-visibility); translate: 0 calc(var(--pan-progress) * -90px); }
   :root[data-hero-visible='false'] .hero-stage { visibility: hidden; }
